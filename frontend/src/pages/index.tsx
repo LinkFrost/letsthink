@@ -26,9 +26,13 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Suspend loading={loading} errored={error}>
-        <ul className="text-neutral-100 text-xl">
+        <ul className="text-xl text-neutral-100">
           {data &&
-            data.map((pokemon) => <li key={pokemon.url}>{pokemon.name}</li>)}
+            data.results.map(
+              (
+                pokemon // ignore the typescript errors for now, just temporary
+              ) => <li key={pokemon.url}>{pokemon.name}</li>
+            )}
         </ul>
       </Suspend>
     </div>

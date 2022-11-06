@@ -13,7 +13,7 @@ const useHttps = <T>(url: string) => {
       const res = await fetch(url);
       const data = await res.json();
 
-      setData(data.results);
+      setData(data);
       setLoading(false);
     } catch (error) {
       setError(true);
