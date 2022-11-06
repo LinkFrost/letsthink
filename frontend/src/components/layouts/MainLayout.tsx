@@ -4,7 +4,7 @@ const inter = Inter();
 
 const Header = () => {
   return (
-    <header className="p-10 text-2xl bg-slate-300 flex justify-between">
+    <header className="flex justify-between bg-slate-300 p-10 text-2xl">
       <h1 className="font-bold">letsthink</h1>
       <Link className="hover:underline" href="/">
         Login
@@ -25,7 +25,7 @@ const FooterLink = ({ href, children, target = "" }: FooterLinkPropTypes) => {
       <Link
         target={target}
         href={href}
-        className="hover:text-zinc-50 transition ease-in duration-75"
+        className="text-sm transition duration-75 ease-out hover:text-neutral-50 hover:underline"
       >
         {children}
       </Link>
@@ -35,20 +35,50 @@ const FooterLink = ({ href, children, target = "" }: FooterLinkPropTypes) => {
 
 const Footer = () => {
   return (
-    <footer className="mt-auto bg-black border-">
-      <hr className="border-neutral-700 border-[1px]"></hr>
-      <div className="flex justify-between max-w-sm mx-auto text-neutral-500 p-10">
+    <footer className="mt-auto bg-black">
+      <hr className="border-[1px] border-neutral-700"></hr>
+      <div className="mx-auto grid max-w-screen-lg grid-cols-2 justify-center gap-2 py-12 px-6 text-neutral-500 sm:grid-cols-4">
         <div>
-          <h2 className="text-lg mb-3 text-neutral-50">Links</h2>
+          <h2 className="my-3 text-lg text-neutral-50">Links</h2>
           <ul>
             <FooterLink href="/">Home</FooterLink>
-            <FooterLink href="/me">My Profile</FooterLink>
-            <FooterLink href="/about">About Us</FooterLink>
-            <FooterLink href="">Repository</FooterLink>
+            <FooterLink href="">My Profile</FooterLink>
+            <FooterLink href="">My Rooms</FooterLink>
           </ul>
         </div>
         <div>
-          <h2 className="text-lg mb-3 text-neutral-50">Team</h2>
+          <h2 className="my-3 text-lg text-neutral-50">Project</h2>
+          <ul>
+            <FooterLink target="_blank" href="">
+              About
+            </FooterLink>
+            <FooterLink target="_blank" href="">
+              Roadmap
+            </FooterLink>
+            <FooterLink target="_blank" href="">
+              Contribute
+            </FooterLink>
+            <FooterLink target="_blank" href="">
+              Careers
+            </FooterLink>
+          </ul>
+        </div>
+        <div>
+          <h2 className="my-3 text-lg text-neutral-50">Connect</h2>
+          <ul>
+            <FooterLink target="_blank" href="">
+              Twitter
+            </FooterLink>
+            <FooterLink target="_blank" href="">
+              Discord
+            </FooterLink>
+            <FooterLink target="_blank" href="">
+              GitHub
+            </FooterLink>
+          </ul>
+        </div>
+        <div>
+          <h2 className="my-3 text-lg text-neutral-50">Team</h2>
           <ul>
             <FooterLink target="_blank" href="https://github.com/joepetrillo">
               Joseph Petrillo
@@ -72,7 +102,7 @@ const Footer = () => {
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div
-      className={`bg-neutral-900 min-h-screen flex flex-col justify-start ${inter.className}`}
+      className={`flex min-h-screen flex-col justify-start bg-neutral-900 ${inter.className}`}
     >
       <Header />
       {children}
