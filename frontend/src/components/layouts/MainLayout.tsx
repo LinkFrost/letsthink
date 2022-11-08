@@ -4,9 +4,9 @@ const inter = Inter();
 
 const Header = () => {
   return (
-    <header className="flex justify-between bg-slate-300 p-10 text-2xl">
-      <h1 className="font-bold">letsthink</h1>
-      <Link className="hover:underline" href="/">
+    <header className="flex justify-between bg-slate-100 p-10">
+      <h1 className="font-bold text-2xl">letsthink</h1>
+      <Link className="hover:underline text-lg" href="/">
         Login
       </Link>
     </header>
@@ -22,11 +22,7 @@ type FooterLinkPropTypes = {
 const FooterLink = ({ href, children, target = "" }: FooterLinkPropTypes) => {
   return (
     <li className="py-2">
-      <Link
-        target={target}
-        href={href}
-        className="text-sm transition duration-75 ease-out hover:text-neutral-50 hover:underline"
-      >
+      <Link target={target} href={href} className="text-sm transition duration-75 ease-out hover:text-neutral-50 hover:underline">
         {children}
       </Link>
     </li>
@@ -101,9 +97,7 @@ const Footer = () => {
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div
-      className={`flex min-h-screen flex-col justify-start bg-neutral-900 ${inter.className}`}
-    >
+    <div className={`flex min-h-screen flex-col justify-start bg-neutral-900 ${inter.className}`}>
       <Header />
       {children}
       <Footer />
