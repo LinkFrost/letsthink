@@ -1,1 +1,0 @@
-import amqplib from "amqplib";

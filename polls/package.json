@@ -14,8 +14,8 @@
     "@types/amqplib": "^0.8.2",
     "@types/node": "^18.11.9"
   },
-  "name": "query",
-  "description": "**Owner:** Joe Petrillo",
+  "name": "polls",
+  "description": "",
   "version": "1.0.0",
   "main": "index.js",
   "author": "",

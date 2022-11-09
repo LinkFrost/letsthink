@@ -1,6 +1,40 @@
+version: "3"
+
 services:
   event-bus:
     image: "rabbitmq:management"
     ports:
       - 5672:5672
       - 15672:15672
+    expose:
+      - 5672
+
+  rooms:
+    build: "./rooms"
+    ports:
+      - 4001:4001
+    volumes:
+      - "./rooms:/usr/app"
+    depends_on:
+      - "event-bus"
+    restart: on-failure:10
+
+  site-health:
+    build: "./site-health"
+    ports:
+      - 4009:4009
+    volumes:
+      - "./site-health:/usr/app"
+    depends_on:
+      - "event-bus"
+    restart: on-failure:10
+
+  polls:
+    build: "./polls"
+    ports:
+      - 4003:4003
+    volumes:
+      - "./polls:/usr/app"
+    depends_on:
+      - "event-bus"
+    restart: on-failure:10
