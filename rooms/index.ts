@@ -15,7 +15,7 @@ app.use(express.json());
 
 app.post("/rooms", async (req, res) => {
   try {
-    const event = Buffer.from(JSON.stringify({ type: "RoomCreated", data: req.body }));
+    const event: Buffer = Buffer.from(JSON.stringify({ type: "RoomCreated", data: req.body }));
     eventBusChannel?.publish("event-bus", "room-events", event);
     res.send(`Sent event of type RoomCreated`);
   } catch (err) {

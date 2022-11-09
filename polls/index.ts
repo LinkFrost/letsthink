@@ -1,18 +1,18 @@
 import amqplib from "amqplib";
 
-const eventBusConnection = await amqplib.connect("amqp://event-bus:5672");
-const eventBusChannel = await eventBusConnection.createChannel();
+const eventBusConnection: amqplib.Connection = await amqplib.connect("amqp://event-bus:5672");
+const eventBusChannel: amqplib.Channel = await eventBusConnection.createChannel();
 
 eventBusChannel.assertExchange("event-bus", "direct", {
   durable: false,
 });
 
-const eventTypes: string[] = ["room-events"];
+const eventKeys: string[] = ["room-events"];
 
 eventBusChannel.assertQueue("polls");
 
-eventTypes.forEach((event) => {
-  eventBusChannel.bindQueue("polls", "event-bus", event);
+eventKeys.forEach((key: string) => {
+  eventBusChannel.bindQueue("polls", "event-bus", key);
 });
 
 eventBusChannel?.consume("polls", (message: amqplib.ConsumeMessage | null) => {

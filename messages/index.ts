@@ -1,8 +1,8 @@
 import amqplib from "amqplib";
 import express from "express";
 
-const eventBusConnection = await amqplib.connect("amqp://event-bus:5672");
-const eventBusChannel = await eventBusConnection.createChannel();
+const eventBusConnection: amqplib.Connection = await amqplib.connect("amqp://event-bus:5672");
+const eventBusChannel: amqplib.Channel = await eventBusConnection.createChannel();
 
 eventBusChannel.assertExchange("event-bus", "direct", {
   durable: false,
@@ -10,10 +10,10 @@ eventBusChannel.assertExchange("event-bus", "direct", {
 
 eventBusChannel.assertQueue("messages");
 
-const eventTypes: string[] = ["room-events"];
+const eventKeys: string[] = ["room-events"];
 
-eventTypes.forEach((event) => {
-  eventBusChannel.bindQueue("messages", "event-bus", event);
+eventKeys.forEach((key: string) => {
+  eventBusChannel.bindQueue("messages", "event-bus", key);
 });
 
 eventBusChannel?.consume("messages", (message: amqplib.ConsumeMessage | null) => {
@@ -36,7 +36,7 @@ app.use(express.json());
 
 app.post("/messages", async (req, res) => {
   try {
-    const event = Buffer.from(JSON.stringify({ type: "MessageCreated", data: req.body }));
+    const event: Buffer = Buffer.from(JSON.stringify({ type: "MessageCreated", data: req.body }));
     eventBusChannel?.publish("event-bus", "message-events", event);
     res.send(`Sent event of type MessageCreated`);
   } catch (err) {
