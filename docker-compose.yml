@@ -2,39 +2,48 @@ version: "3"
 
 services:
   event-bus:
+    container_name: letsthink-event-bus
     image: "rabbitmq:management"
     ports:
       - 5672:5672
       - 15672:15672
     expose:
       - 5672
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 10s
+      timeout: 30s
+      retries: 10
 
   rooms:
+    container_name: letsthink-rooms
     build: "./rooms"
     ports:
       - 4001:4001
     volumes:
       - "./rooms:/usr/app"
     depends_on:
-      - "event-bus"
-    restart: on-failure:10
+      event-bus:
+        condition: service_healthy
 
   site-health:
+    container_name: letsthink-site-health
     build: "./site-health"
     ports:
       - 4009:4009
     volumes:
       - "./site-health:/usr/app"
     depends_on:
-      - "event-bus"
-    restart: on-failure:10
+      event-bus:
+        condition: service_healthy
 
   polls:
+    container_name: letsthink-polls
     build: "./polls"
     ports:
       - 4003:4003
     volumes:
       - "./polls:/usr/app"
     depends_on:
-      - "event-bus"
-    restart: on-failure:10
+      event-bus:
+        condition: service_healthy
