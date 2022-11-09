@@ -47,3 +47,14 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+
+  messages:
+    container_name: letsthink-messages
+    build: "./messages"
+    ports:
+      - 4002:4002
+    volumes:
+      - "./messages:/usr/app"
+    depends_on:
+      event-bus:
+        condition: service_healthy
