@@ -5,7 +5,7 @@ import express from "express";
 const eventBusConnection = await amqplib.connect("amqp://event-bus:5672");
 const eventBusChannel = await eventBusConnection.createChannel();
 
-const queue: string = "rooms";
+const queue: string = "query";
 const exchange: string = "event-bus";
 
 // Create exchange
@@ -16,7 +16,7 @@ eventBusChannel.assertExchange(exchange, "direct", {
 // Create queue for service
 eventBusChannel.assertQueue(queue);
 
-const eventKeys: string[] = ["expiration-events"];
+const eventKeys: string[] = ["room-events", "poll-events", "vote-events", "moderator-events", "visualizer-events", "expiration-events"];
 
 // Subscribe to each event key
 eventKeys.forEach((key: string) => {
@@ -41,18 +41,4 @@ eventBusChannel?.consume(queue, (message: amqplib.ConsumeMessage | null) => {
 
     eventBusChannel.ack(message);
   }
-});
-
-app.post("/rooms", async (req, res) => {
-  try {
-    const event: Buffer = Buffer.from(JSON.stringify({ type: "RoomCreated", data: req.body }));
-    eventBusChannel?.publish("event-bus", "room-events", event);
-    res.send(`Sent event of type RoomCreated`);
-  } catch (err) {
-    res.send({ error: err });
-  }
-});
-
-app.listen(4001, () => {
-  console.log("Listening on port 4001");
 });

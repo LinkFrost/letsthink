@@ -4,19 +4,22 @@ import amqplib from "amqplib";
 const eventBusConnection: amqplib.Connection = await amqplib.connect("amqp://event-bus:5672");
 const eventBusChannel: amqplib.Channel = await eventBusConnection.createChannel();
 
+const queue: string = "site-health";
+const exchange: string = "event-bus";
+
 // Create exchange
-eventBusChannel.assertExchange("event-bus", "direct", {
+eventBusChannel.assertExchange(exchange, "direct", {
   durable: false,
 });
 
-const eventKeys: string[] = ["room-events", "message-events"];
+const eventKeys: string[] = ["room-events", "message-events", "moderator-events", "vote-events", "expiration-events"];
 
 // Create queue for service
-eventBusChannel.assertQueue("site-health");
+eventBusChannel.assertQueue(queue);
 
 // Subscribe to each event key
 eventKeys.forEach((key: string) => {
-  eventBusChannel.bindQueue("site-health", "event-bus", key);
+  eventBusChannel.bindQueue(queue, exchange, key);
 });
 
 interface RoomCreatedEvent {
@@ -41,7 +44,7 @@ interface MessageCreatedEvent {
 type Event = RoomCreatedEvent | MessageCreatedEvent;
 
 // Listen for incoming messages
-eventBusChannel.consume("site-health", (message) => {
+eventBusChannel.consume(queue, (message) => {
   if (message !== null) {
     const { type, data }: Event = JSON.parse(message.content.toString());
 
@@ -51,13 +54,12 @@ eventBusChannel.consume("site-health", (message) => {
         break;
       }
       case "MessageCreated": {
-        console.log(data);
         console.log(`A message was created in room ${data.roomId} with the following content: ${data.content}`);
         break;
       }
     }
 
-    // acknowledge the message to the queue
+    // Acknowledge the message to the queue
     eventBusChannel.ack(message);
   }
 });
