@@ -19,29 +19,45 @@ eventKeys.forEach((key: string) => {
   eventBusChannel.bindQueue("site-health", "event-bus", key);
 });
 
-// Listen for incoming messages
-eventBusChannel?.consume("site-health", (message: amqplib.ConsumeMessage | null) => {
-  if (message !== null) {
-    const { type, data } = JSON.parse(message.content.toString());
+interface RoomCreatedEvent {
+  type: "RoomCreated";
+  data: {
+    roomType: string;
+    userId: string;
+    title: string;
+    description: string;
+  };
+}
 
-    switch (message.fields.routingKey) {
-      case "room-events": {
-        switch (type) {
-          case "RoomCreated": {
-            console.log(`A ${data.type} room named ${data.title} was created by user with id ${data.userId}`);
-          }
-        }
+interface MessageCreatedEvent {
+  type: "MessageCreated";
+  data: {
+    userId: string;
+    roomId: string;
+    content: string;
+  };
+}
+
+type Event = RoomCreatedEvent | MessageCreatedEvent;
+
+// Listen for incoming messages
+eventBusChannel.consume("site-health", (message) => {
+  if (message !== null) {
+    const { type, data }: Event = JSON.parse(message.content.toString());
+
+    switch (type) {
+      case "RoomCreated": {
+        console.log(`A ${data.roomType} room named ${data.title} was created by user with id ${data.userId}`);
         break;
       }
-      case "message-events": {
-        switch (type) {
-          case "MessageCreated": {
-            console.log(`A message was created in room ${data.roomId} with the following content: ${data.content}`);
-          }
-        }
+      case "MessageCreated": {
+        console.log(data);
+        console.log(`A message was created in room ${data.roomId} with the following content: ${data.content}`);
         break;
       }
     }
+
+    // acknowledge the message to the queue
     eventBusChannel.ack(message);
   }
 });
