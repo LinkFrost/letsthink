@@ -6,7 +6,7 @@ const Header = () => {
   return (
     <header className="flex justify-between bg-slate-100 p-10">
       <h1 className="font-bold text-2xl">letsthink</h1>
-      <Link className="hover:underline text-lg" href="/">
+      <Link className="hover:underline text-lg" href="login">
         Login
       </Link>
     </header>
