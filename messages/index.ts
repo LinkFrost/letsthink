@@ -1,21 +1,26 @@
 import amqplib from "amqplib";
 import express from "express";
 
+// Connect to rabbitmq, create a channel
 const eventBusConnection: amqplib.Connection = await amqplib.connect("amqp://event-bus:5672");
 const eventBusChannel: amqplib.Channel = await eventBusConnection.createChannel();
 
+// Create exchange
 eventBusChannel.assertExchange("event-bus", "direct", {
   durable: false,
 });
 
+// Create queue for service
 eventBusChannel.assertQueue("messages");
 
 const eventKeys: string[] = ["room-events"];
 
+// Subscribe to each event key
 eventKeys.forEach((key: string) => {
   eventBusChannel.bindQueue("messages", "event-bus", key);
 });
 
+// Listen for incoming messages
 eventBusChannel?.consume("messages", (message: amqplib.ConsumeMessage | null) => {
   if (message !== null) {
     const { type, data } = JSON.parse(message.content.toString());

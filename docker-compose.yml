@@ -11,7 +11,7 @@ services:
       - 5672
     healthcheck:
       test: rabbitmq-diagnostics check_port_connectivity
-      interval: 10s
+      interval: 1s
       timeout: 30s
       retries: 10
 
