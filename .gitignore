@@ -1,2 +1,4 @@
 node_modules/
 .DS_Store
+install_modules.sh
+remove_modules.sh
