@@ -8,15 +8,15 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "nodemon index.ts",
-    "start": "ts-node index.ts"
+    "dev": "nodemon src/index.ts",
+    "start": "ts-node srcindex.ts"
   },
   "devDependencies": {
     "@types/amqplib": "^0.8.2",
     "@types/express": "^4.17.14",
     "@types/node": "^18.11.9"
   },
-  "name": "rooms",
+  "name": "letsthink-rooms",
   "description": "",
   "version": "1.0.0",
   "main": "index.js",

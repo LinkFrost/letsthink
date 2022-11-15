@@ -11,9 +11,21 @@ services:
       - 5672
     healthcheck:
       test: rabbitmq-diagnostics check_port_connectivity
-      interval: 1s
+      interval: 10s
       timeout: 30s
       retries: 10
+
+  frontend:
+    container_name: letsthink-frontend
+    build: "./frontend"
+    ports:
+      - 3000:3000
+    volumes:
+      - "./frontend/public:/usr/app/public"
+      - "./frontend/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
 
   rooms:
     container_name: letsthink-rooms
@@ -21,29 +33,7 @@ services:
     ports:
       - 4001:4001
     volumes:
-      - "./rooms:/usr/app"
-    depends_on:
-      event-bus:
-        condition: service_healthy
-
-  site-health:
-    container_name: letsthink-site-health
-    build: "./site-health"
-    ports:
-      - 4009:4009
-    volumes:
-      - "./site-health:/usr/app"
-    depends_on:
-      event-bus:
-        condition: service_healthy
-
-  polls:
-    container_name: letsthink-polls
-    build: "./polls"
-    ports:
-      - 4003:4003
-    volumes:
-      - "./polls:/usr/app"
+      - "./rooms/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
@@ -54,7 +44,117 @@ services:
     ports:
       - 4002:4002
     volumes:
-      - "./messages:/usr/app"
+      - "./messages/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
+
+  polls:
+    container_name: letsthink-polls
+    build: "./polls"
+    ports:
+      - 4003:4003
+    volumes:
+      - "./polls/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
+
+  moderator:
+    container_name: letsthink-moderator
+    build: "./moderator"
+    ports:
+      - 4004:4004
+    volumes:
+      - "./moderator/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
+
+  email:
+    container_name: letsthink-email
+    build: "./email"
+    ports:
+      - 4005:4005
+    volumes:
+      - "./email/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
+
+  # users:
+  #   container_name: letsthink-users
+  #   build: "./users"
+  #   ports:
+  #     - 4006:4006
+  #   volumes:
+  #     - "./users/src:/usr/app/src"
+  #   depends_on:
+  #     event-bus:
+  #       condition: service_healthy
+
+  # authenticator:
+  #   container_name: letsthink-authenticator
+  #   build: "./authenticator"
+  #   ports:
+  #     - 4007:4007
+  #   volumes:
+  #     - "./authenticator/src:/usr/app/src"
+  #   depends_on:
+  #     event-bus:
+  #       condition: service_healthy
+
+  expiration:
+    container_name: letsthink-expiration
+    build: "./expiration"
+    ports:
+      - 4008:4008
+    volumes:
+      - "./expiration/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
+
+  site-health:
+    container_name: letsthink-site-health
+    build: "./site-health"
+    ports:
+      - 4009:4009
+    volumes:
+      - "./site-health/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
+
+  visualizer:
+    container_name: letsthink-visualizer
+    build: "./visualizer"
+    ports:
+      - 4010:4010
+    volumes:
+      - "./visualizer/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
+
+  query:
+    container_name: letsthink-query
+    build: "./query"
+    ports:
+      - 4011:4011
+    volumes:
+      - "./query/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
+
+  vote:
+    container_name: letsthink-vote
+    build: "./vote"
+    ports:
+      - 4012:4012
+    volumes:
+      - "./vote/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
