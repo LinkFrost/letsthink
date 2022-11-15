@@ -11,7 +11,7 @@ services:
       - 5672
     healthcheck:
       test: rabbitmq-diagnostics check_port_connectivity
-      interval: 1s
+      interval: 10s
       timeout: 30s
       retries: 10
 
@@ -21,7 +21,8 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - "./frontend:/usr/app"
+      - "./frontend/public:/usr/app/public"
+      - "./frontend/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
@@ -32,7 +33,7 @@ services:
     ports:
       - 4001:4001
     volumes:
-      - "./rooms:/usr/app"
+      - "./rooms/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
@@ -43,7 +44,7 @@ services:
     ports:
       - 4002:4002
     volumes:
-      - "./messages:/usr/app"
+      - "./messages/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
@@ -54,7 +55,7 @@ services:
     ports:
       - 4003:4003
     volumes:
-      - "./polls:/usr/app"
+      - "./polls/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
@@ -65,7 +66,7 @@ services:
     ports:
       - 4004:4004
     volumes:
-      - "./moderator:/usr/app"
+      - "./moderator/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
@@ -76,7 +77,7 @@ services:
     ports:
       - 4005:4005
     volumes:
-      - "./email:/usr/app"
+      - "./email/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
@@ -87,7 +88,7 @@ services:
   #   ports:
   #     - 4006:4006
   #   volumes:
-  #     - "./users:/usr/app"
+  #     - "./users/src:/usr/app/src"
   #   depends_on:
   #     event-bus:
   #       condition: service_healthy
@@ -98,7 +99,7 @@ services:
   #   ports:
   #     - 4007:4007
   #   volumes:
-  #     - "./authenticator:/usr/app"
+  #     - "./authenticator/src:/usr/app/src"
   #   depends_on:
   #     event-bus:
   #       condition: service_healthy
@@ -109,7 +110,7 @@ services:
     ports:
       - 4008:4008
     volumes:
-      - "./expiration:/usr/app"
+      - "./expiration/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
@@ -120,7 +121,7 @@ services:
     ports:
       - 4009:4009
     volumes:
-      - "./site-health:/usr/app"
+      - "./site-health/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
@@ -131,7 +132,7 @@ services:
     ports:
       - 4010:4010
     volumes:
-      - "./visualizer:/usr/app"
+      - "./visualizer/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
@@ -142,7 +143,7 @@ services:
     ports:
       - 4011:4011
     volumes:
-      - "./query:/usr/app"
+      - "./query/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy
@@ -153,7 +154,7 @@ services:
     ports:
       - 4012:4012
     volumes:
-      - "./vote:/usr/app"
+      - "./vote/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy

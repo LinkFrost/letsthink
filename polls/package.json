@@ -7,8 +7,8 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "nodemon index.ts",
-    "start": "ts-node index.ts"
+    "dev": "nodemon src/index.ts",
+    "start": "ts-node srcindex.ts"
   },
   "devDependencies": {
     "@types/amqplib": "^0.8.2",
