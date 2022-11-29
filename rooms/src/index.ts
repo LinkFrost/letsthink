@@ -29,7 +29,7 @@ const app = express();
 app.use(express.json());
 
 // Listen for incoming messages
-eventBusChannel?.consume(queue, (message: amqplib.ConsumeMessage | null) => {
+eventBusChannel.consume(queue, (message) => {
   if (message !== null) {
     const { type, data }: Event = JSON.parse(message.content.toString());
 

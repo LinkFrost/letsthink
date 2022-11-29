@@ -44,7 +44,7 @@ interface MessageCreatedEvent {
 type Event = RoomCreatedEvent | MessageCreatedEvent;
 
 // Listen for incoming messages
-eventBusChannel.consume(queue, (message) => {
+eventBusChannel.consume(queue, (message: amqplib.ConsumeMessage | null) => {
   if (message !== null) {
     const { type, data }: Event = JSON.parse(message.content.toString());
 
