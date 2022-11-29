@@ -1,5 +1,20 @@
 import amqplib from "amqplib";
 import express from "express";
+import pg from "pg";
+// const { Client } = pg;
+
+const client = new pg.Client({
+  user: "postgres",
+  password: "postgres",
+  host: "rooms-db",
+  port: 5432,
+});
+
+client.connect().then(() => {
+  client.query("INSERT INTO rooms (username) VALUES ('joe')", (err, res) => {
+    console.log(res.rows);
+  });
+});
 
 // Connect to rabbitmq, create a channel
 const eventBusConnection = await amqplib.connect("amqp://event-bus:5672");
