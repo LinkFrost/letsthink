@@ -3,7 +3,8 @@ CREATE TABLE rooms (
   userId text,
   title text,
   about text,
-  createDate DATETIME,
+  createDate TIMESTAMP default current_timestamp,
+  duration integer,
   roomType text,
   expired boolean
 )
