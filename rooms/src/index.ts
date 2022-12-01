@@ -1,7 +1,6 @@
 import amqplib from "amqplib";
 import express from "express";
 import pg from "pg";
-// const { Client } = pg;
 
 const client = new pg.Client({
   user: "postgres",

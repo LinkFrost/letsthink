@@ -1,9 +1,9 @@
 CREATE TABLE rooms (
-  id SERIAL PRIMARY KEY,
-  userId varchar(255),
-  title varchar(255),
-  about varchar(280),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  userId text,
+  title text,
+  about text,
   createDate DATETIME,
-  roomType varchar(255),
+  roomType text,
   expired boolean
 )
