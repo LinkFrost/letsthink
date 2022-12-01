@@ -2,16 +2,17 @@ import amqplib from "amqplib";
 import express from "express";
 import pg from "pg";
 import { RoomData, Event } from "./types";
+import { createClient } from "redis";
 
 // Connect to service specific database
-const client = new pg.Client({
+const pgClient = new pg.Client({
   user: "postgres",
   password: "postgres",
   host: "messages-db",
   port: 5432,
 });
 
-await client.connect();
+await pgClient.connect();
 
 // Connect to rabbitmq, create a channel
 const eventBusConnection: amqplib.Connection = await amqplib.connect("amqp://event-bus:5672");
@@ -50,7 +51,7 @@ eventBusChannel?.consume(queue, async (message: amqplib.ConsumeMessage | null) =
           const queryValues = [userId, title, about, duration, roomType, expired];
 
           try {
-            client.query(queryText, queryValues).then((res) => {
+            pgClient.query(queryText, queryValues).then((res) => {
               console.log(res.rows[0]);
             });
           } catch (err) {
@@ -72,7 +73,7 @@ app.post("/messages", async (req, res) => {
     const { roomId, content } = req.body;
 
     // Check if given roomId matches a valid room and if that room is expired
-    const roomQueryResults = await client.query("SELECT * FROM rooms WHERE id=$1", [roomId]).then((res) => res.rows);
+    const roomQueryResults = await pgClient.query("SELECT * FROM rooms WHERE id=$1", [roomId]).then((res) => res.rows);
 
     if (roomQueryResults.length !== 1) {
       return res.status(400).send({ error: `Room with id ${roomId} does not exist!` });
@@ -89,7 +90,7 @@ app.post("/messages", async (req, res) => {
 
     // Create message in database and send it through the event bus
     try {
-      client.query(queryText, queryValues);
+      pgClient.query(queryText, queryValues);
 
       const event: Buffer = Buffer.from(JSON.stringify({ type: "MessageCreated", data: req.body }));
       eventBusChannel?.publish("event-bus", "message-events", event);
