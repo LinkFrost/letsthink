@@ -1,5 +1,15 @@
 import amqplib from "amqplib";
 import express from "express";
+import pg from "pg";
+
+const client = new pg.Client({
+  user: "postgres",
+  password: "postgres",
+  host: "messages-db",
+  port: 5432,
+});
+
+await client.connect();
 
 // Connect to rabbitmq, create a channel
 const eventBusConnection: amqplib.Connection = await amqplib.connect("amqp://event-bus:5672");
@@ -26,23 +36,49 @@ eventKeys.forEach((key: string) => {
 interface RoomCreatedEvent {
   type: "RoomCreated";
   data: {
-    roomType: string;
     userId: string;
     title: string;
-    description: string;
+    about: string;
+    duration: number;
+    roomType: string;
+    expired: boolean;
   };
+}
+
+interface RoomData {
+  id: string;
+  userId: string;
+  title: string;
+  about: string;
+  createdate: string;
+  duration: number;
+  roomType: string;
+  expired: boolean;
 }
 
 type Event = RoomCreatedEvent;
 
 // Listen for incoming messages
-eventBusChannel?.consume(queue, (message: amqplib.ConsumeMessage | null) => {
+eventBusChannel?.consume(queue, async (message: amqplib.ConsumeMessage | null) => {
   if (message !== null) {
     const { type, data }: Event = JSON.parse(message.content.toString());
 
+    console.log(`Received event of type ${type}`);
+
     switch (type) {
       case "RoomCreated": {
-        console.log(`A ${data.roomType} room named ${data.title} was created by user with id ${data.userId}`);
+        const { userId, title, about, duration, roomType, expired } = data;
+
+        const queryText = "INSERT INTO rooms(userId, title, about, duration, roomType, expired) VALUES($1, $2, $3, $4, $5, $6) RETURNING *";
+        const queryValues = [userId, title, about, duration, roomType, expired];
+
+        try {
+          client.query(queryText, queryValues).then((res) => {
+            console.log(res.rows[0]);
+          });
+        } catch (err) {
+          console.log(err);
+        }
       }
     }
 
@@ -55,11 +91,37 @@ app.use(express.json());
 
 app.post("/messages", async (req, res) => {
   try {
-    const event: Buffer = Buffer.from(JSON.stringify({ type: "MessageCreated", data: req.body }));
-    eventBusChannel?.publish("event-bus", "message-events", event);
-    res.send(`Sent event of type MessageCreated`);
+    const { roomId, content } = req.body;
+
+    const roomQueryResults = await client.query("SELECT * FROM rooms WHERE id=$1", [roomId]).then((res) => res.rows);
+
+    if (roomQueryResults.length !== 1) {
+      return res.status(400).send({ error: `Room with id ${roomId} does not exist!` });
+    }
+
+    const roomData: RoomData = roomQueryResults[0];
+
+    if (roomData.expired) {
+      return res.status(400).send({ error: `Room with id ${roomId} is expired!` });
+    }
+
+    const queryText = "INSERT INTO messages(roomId, content) VALUES($1, $2) RETURNING *";
+    const queryValues = [roomId, content];
+
+    try {
+      client.query(queryText, queryValues).then((res) => {
+        console.log(res.rows[0]);
+      });
+
+      const event: Buffer = Buffer.from(JSON.stringify({ type: "MessageCreated", data: req.body }));
+      eventBusChannel?.publish("event-bus", "message-events", event);
+
+      res.send(`Sent event of type MessageCreated`);
+    } catch (err) {
+      res.status(500).send({ error: err });
+    }
   } catch (err) {
-    res.send({ error: err });
+    res.status(500).send({ error: err });
   }
 });
 
