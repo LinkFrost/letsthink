@@ -1,7 +1,9 @@
 import amqplib from "amqplib";
 import express from "express";
 import pg from "pg";
+import { RoomCreatedEvent, RoomData, Event } from "./types";
 
+// Connect to service specific database
 const client = new pg.Client({
   user: "postgres",
   password: "postgres",
@@ -32,31 +34,6 @@ const eventKeys: string[] = ["room-events", "vote-events", "moderator-events", "
 eventKeys.forEach((key: string) => {
   eventBusChannel.bindQueue(queue, exchange, key);
 });
-
-interface RoomCreatedEvent {
-  type: "RoomCreated";
-  data: {
-    userId: string;
-    title: string;
-    about: string;
-    duration: number;
-    roomType: string;
-    expired: boolean;
-  };
-}
-
-interface RoomData {
-  id: string;
-  userId: string;
-  title: string;
-  about: string;
-  createdate: string;
-  duration: number;
-  roomType: string;
-  expired: boolean;
-}
-
-type Event = RoomCreatedEvent;
 
 // Listen for incoming messages
 eventBusChannel?.consume(queue, async (message: amqplib.ConsumeMessage | null) => {
@@ -93,6 +70,7 @@ app.post("/messages", async (req, res) => {
   try {
     const { roomId, content } = req.body;
 
+    // Check if given roomId matches a valid room and if that room is expired
     const roomQueryResults = await client.query("SELECT * FROM rooms WHERE id=$1", [roomId]).then((res) => res.rows);
 
     if (roomQueryResults.length !== 1) {
@@ -108,10 +86,9 @@ app.post("/messages", async (req, res) => {
     const queryText = "INSERT INTO messages(roomId, content) VALUES($1, $2) RETURNING *";
     const queryValues = [roomId, content];
 
+    // Create message in database and send it through the event bus
     try {
-      client.query(queryText, queryValues).then((res) => {
-        console.log(res.rows[0]);
-      });
+      client.query(queryText, queryValues);
 
       const event: Buffer = Buffer.from(JSON.stringify({ type: "MessageCreated", data: req.body }));
       eventBusChannel?.publish("event-bus", "message-events", event);
