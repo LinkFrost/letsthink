@@ -82,6 +82,17 @@ services:
       event-bus:
         condition: service_healthy
 
+  polls-db:
+    container_name: letsthink-polls-db
+    image: postgres:alpine
+    restart: always
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - "./polls/src/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+
   moderator:
     container_name: letsthink-moderator
     build: "./moderator"

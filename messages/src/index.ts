@@ -1,7 +1,7 @@
 import amqplib from "amqplib";
 import express from "express";
 import pg from "pg";
-import { RoomCreatedEvent, RoomData, Event } from "./types";
+import { RoomData, Event } from "./types";
 
 // Connect to service specific database
 const client = new pg.Client({
@@ -45,16 +45,17 @@ eventBusChannel?.consume(queue, async (message: amqplib.ConsumeMessage | null) =
     switch (type) {
       case "RoomCreated": {
         const { userId, title, about, duration, roomType, expired } = data;
+        if (roomType === "messages") {
+          const queryText = "INSERT INTO rooms(userId, title, about, duration, roomType, expired) VALUES($1, $2, $3, $4, $5, $6) RETURNING *";
+          const queryValues = [userId, title, about, duration, roomType, expired];
 
-        const queryText = "INSERT INTO rooms(userId, title, about, duration, roomType, expired) VALUES($1, $2, $3, $4, $5, $6) RETURNING *";
-        const queryValues = [userId, title, about, duration, roomType, expired];
-
-        try {
-          client.query(queryText, queryValues).then((res) => {
-            console.log(res.rows[0]);
-          });
-        } catch (err) {
-          console.log(err);
+          try {
+            client.query(queryText, queryValues).then((res) => {
+              console.log(res.rows[0]);
+            });
+          } catch (err) {
+            console.log(err);
+          }
         }
       }
     }
