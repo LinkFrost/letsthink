@@ -10,10 +10,21 @@ const client = new pg.Client({
 });
 
 client.connect().then(() => {
-  client.query("INSERT INTO rooms (username) VALUES ('joe')", (err, res) => {
-    console.log(res.rows);
-  });
+  client.query(
+    "INSERT INTO rooms (userId, title, about, duration, roomType, expired) VALUES ('1234', 'my room', 'this is my room', 14,'polls', false)",
+    (err, res) => {
+      console.log(res.rows);
+    }
+  );
 });
+
+// userId text,
+//   title text,
+//   about text,
+//   createDate DATETIME,
+//   roomType text,
+//   expired boolean
+// )
 
 // Connect to rabbitmq, create a channel
 const eventBusConnection = await amqplib.connect("amqp://event-bus:5672");
