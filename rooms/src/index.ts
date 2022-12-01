@@ -1,5 +1,6 @@
 import amqplib from "amqplib";
 import express from "express";
+import { traceDeprecation } from "process";
 
 // Connect to rabbitmq, create a channel
 const eventBusConnection = await amqplib.connect("amqp://event-bus:5672");
@@ -41,6 +42,19 @@ eventBusChannel.consume(queue, (message) => {
 
     eventBusChannel.ack(message);
   }
+});
+
+app.get("/session", async (req, res) => {
+  const mockSession = {
+    session: {
+      user: {
+        id: "clb4aw5a9000008mk9tsf4qcu",
+        username: "test user",
+      },
+    },
+  };
+
+  res.send(mockSession);
 });
 
 app.post("/rooms", async (req, res) => {

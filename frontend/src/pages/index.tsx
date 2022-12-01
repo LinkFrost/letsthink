@@ -3,20 +3,11 @@ import { useEffect, useState } from "react";
 import Head from "next/head";
 import Suspend from "../components/utils/Suspend";
 import useHttp from "../utils/hooks/useHttp";
-
-// TEMPORARY - Just using to test out Suspend and useHttp components/hooks
-const api_base = "https://pokeapi.co/api/v2/pokemon";
-const NUM_POKEMON_TO_FETCH = 10;
-const POKEMON_OFFSET = Math.floor(Math.random() * 250);
-const fetch_url = `${api_base}?limit=${NUM_POKEMON_TO_FETCH}&offset=${POKEMON_OFFSET}`;
-type Pokemon = {
-  name: string;
-  url: string;
-};
-// TEMPORARY
+import { Session } from "../utils/types/types";
+import useSession from "../utils/hooks/useSession";
 
 export default function Home() {
-  const { data, loading, error } = useHttp<Pokemon[]>(fetch_url);
+  const { session, loading, error } = useSession();
 
   return (
     <div className="p-10">
@@ -26,14 +17,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Suspend loading={loading} errored={error}>
-        <ul className="text-xl text-neutral-100">
-          {data &&
-            data.results.map(
-              (
-                pokemon // ignore the typescript errors for now, just temporary
-              ) => <li key={pokemon.url}>{pokemon.name}</li>
-            )}
-        </ul>
+        <h1 className="text-4xl font-bold">Welcome {session?.session?.user.username}</h1>
       </Suspend>
     </div>
   );
