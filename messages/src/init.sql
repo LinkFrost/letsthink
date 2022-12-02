@@ -1,13 +1,13 @@
 
 CREATE TABLE rooms (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY,
   userId text,
   title text,
   about text,
-  createDate TIMESTAMP default current_timestamp,
+  createDate TIMESTAMP,
   duration integer,
   roomType text,
-  expired boolean
+  expired boolean default false
 );
 
 CREATE TABLE messages (

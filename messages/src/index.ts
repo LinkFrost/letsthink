@@ -18,7 +18,7 @@ interface RoomData {
 
 const queue = "messages";
 
-const { eventBusChannel, confirmChannel } = await initRabbit(queue, ["RoomCreated"]);
+const { eventBusChannel, confirmChannel } = await initRabbit(queue, ["RoomCreated", "RoomExpired"]);
 
 // Connect to service specific database
 const pgClient = new pg.Pool({
@@ -34,19 +34,29 @@ await pgClient.connect();
 eventBusChannel.consume(queue, async (message) => {
   if (message !== null) {
     const { key, data } = JSON.parse(message.content.toString());
+    console.log(data);
 
     console.log(`Received event of type ${key}`);
 
     switch (key) {
       case "RoomCreated": {
-        const { userId, title, about, duration, roomType, expired } = data;
+        const { id, userid, title, about, createdate, duration, roomtype } = data;
 
-        const queryText = "INSERT INTO rooms(userId, title, about, duration, roomType, expired) VALUES($1, $2, $3, $4, $5, $6) RETURNING *";
-        const queryValues = [userId, title, about, duration, roomType, expired];
+        const queryText = "INSERT INTO rooms(id, userid, title, about, createdate, duration, roomtype) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *";
+        const queryValues = [id, userid, title, about, createdate, duration, roomtype];
 
         pgClient.query(queryText, queryValues);
 
         break;
+      }
+
+      case "RoomExpired": {
+        const { roomId } = data;
+
+        const queryText = "UPDATE rooms SET expired=$1 WHERE id=$2";
+        const queryValues = [true, roomId];
+
+        pgClient.query(queryText, queryValues);
       }
     }
 
