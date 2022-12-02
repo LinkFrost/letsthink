@@ -79,41 +79,78 @@ eventBusChannel.consume("site-health", async (message) => {
     const siteHealthData: SiteHealthData = await fetchSiteHealthData();
 
     switch (key) {
-      case "RoomExpired":
-        siteHealthData.expiredRooms += 1;
-        updateDatabase(siteHealthData);
-        break;
-      case "RoomCreated":
-        siteHealthData.totalRooms += 1;
-        siteHealthData.activeRooms += 1;
+      case "RoomExpired": {
+        const updateDoc = {
+          $set: {
+            expiredRooms: siteHealthData.expiredRooms + 1,
+          },
+        };
 
-        if (data.roomType === "message") {
-          siteHealthData.messageRooms += 1;
-        } else {
-          siteHealthData.pollRooms += 1;
-        }
-        updateDatabase(siteHealthData);
+        const result = await collection.updateOne({}, updateDoc);
         break;
+      }
+      case "RoomCreated": {
+        if (data.roomType === "message") {
+          const updateDoc = {
+            $set: {
+              totalRooms: siteHealthData.totalRooms + 1,
+              activeRooms: siteHealthData.activeRooms + 1,
+              messageRooms: siteHealthData.messageRooms + 1,
+            },
+          };
+          const result = await collection.updateOne({}, updateDoc);
+        } else {
+          const updateDoc = {
+            $set: {
+              totalRooms: siteHealthData.totalRooms + 1,
+              activeRooms: siteHealthData.activeRooms + 1,
+              pollRooms: siteHealthData.pollRooms + 1,
+            },
+          };
+          const result = await collection.updateOne({}, updateDoc);
+        }
+        break;
+      }
       case "MessageModerated": {
         if (data.moderated === "accepted") {
-          siteHealthData.totalMessages += 1;
-          updateDatabase(siteHealthData);
+          const updateDoc = {
+            $set: {
+              totalMessages: siteHealthData.totalMessages + 1,
+            },
+          };
+
+          const result = await collection.updateOne({}, updateDoc);
         }
         break;
       }
       case "UserCreated": {
-        siteHealthData.totalUsers += 1;
-        updateDatabase(siteHealthData);
+        const updateDoc = {
+          $set: {
+            totalUsers: siteHealthData.totalUsers + 1,
+          },
+        };
+
+        const result = await collection.updateOne({}, updateDoc);
         break;
       }
       case "PollVoted": {
-        siteHealthData.totalVotes += 1;
-        updateDatabase(siteHealthData);
+        const updateDoc = {
+          $set: {
+            totalVotes: siteHealthData.totalVotes + 1,
+          },
+        };
+
+        const result = await collection.updateOne({}, updateDoc);
         break;
       }
       case "MessageVoted": {
-        siteHealthData.totalVotes += 1;
-        updateDatabase(siteHealthData);
+        const updateDoc = {
+          $set: {
+            totalVotes: siteHealthData.totalVotes + 1,
+          },
+        };
+
+        const result = await collection.updateOne({}, updateDoc);
         break;
       }
       case "HTTPRequest": {
@@ -147,15 +184,19 @@ const fetchSiteHealthData = async () => {
 
 app.post("/site-health", async (req, res) => {
   // send event to rabbitMQ
-  const event: HTTPRequest = { key: "HTTPRequest", data: { status: 0 } };
+  const event: PollVoted = {
+    key: "PollVoted",
+    data: {
+      id: "string",
+      email: "string",
+      username: "string",
+      password: "string",
+    },
+  };
   confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
   await confirmChannel.waitForConfirms();
   res.send(200);
 });
-
-const updateDatabase = (siteHealthData: SiteHealthData) => {
-  return true;
-};
 
 app.listen(4009, () => {
   console.log("site health service listening on port 4009");
