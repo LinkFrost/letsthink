@@ -29,12 +29,12 @@ export interface RoomCreated extends Event {
 
 export interface RoomData {
   id: string;
-  userId: string;
+  userid: string;
   title: string;
   about: string;
   createdate: string;
   duration: number;
-  roomType: string;
+  roomtype: string;
   expired: boolean;
 }
 
@@ -44,4 +44,26 @@ export interface MessageCreated extends Event {
     roomId: string;
     content: string;
   };
+}
+
+export interface PollCreated extends Event {
+  key: "PollCreated";
+  data: {
+    id: string;
+    roomId: string;
+    pollOptions: PollOptions[];
+  };
+}
+
+export interface PollData {
+  id: string;
+  roomid: string;
+}
+
+export interface PollOptions {
+  id: string;
+  title: string;
+  optionnumber: number;
+  votes: number;
+  pollid: string;
 }

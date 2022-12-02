@@ -3,18 +3,7 @@ import pg from "pg";
 import cors from "cors";
 import z from "zod";
 import initRabbit from "./initRabbit.js";
-import type { RoomCreated } from "./events.js";
-
-interface RoomData {
-  id: string;
-  userId: string;
-  title: string;
-  about: string;
-  createdate: string;
-  duration: number;
-  roomType: string;
-  expired: boolean;
-}
+import type { MessageCreated, RoomData } from "./events.js";
 
 const queue = "messages";
 
@@ -34,7 +23,6 @@ await pgClient.connect();
 eventBusChannel.consume(queue, async (message) => {
   if (message !== null) {
     const { key, data } = JSON.parse(message.content.toString());
-    console.log(data);
 
     console.log(`Received event of type ${key}`);
 
@@ -42,10 +30,12 @@ eventBusChannel.consume(queue, async (message) => {
       case "RoomCreated": {
         const { id, userid, title, about, createdate, duration, roomtype } = data;
 
-        const queryText = "INSERT INTO rooms(id, userid, title, about, createdate, duration, roomtype) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *";
-        const queryValues = [id, userid, title, about, createdate, duration, roomtype];
+        if (roomtype === "message") {
+          const queryText = "INSERT INTO rooms(id, userid, title, about, createdate, duration, roomtype) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *";
+          const queryValues = [id, userid, title, about, createdate, duration, roomtype];
 
-        pgClient.query(queryText, queryValues);
+          pgClient.query(queryText, queryValues);
+        }
 
         break;
       }
@@ -57,6 +47,8 @@ eventBusChannel.consume(queue, async (message) => {
         const queryValues = [true, roomId];
 
         pgClient.query(queryText, queryValues);
+
+        break;
       }
     }
 
@@ -99,8 +91,8 @@ app.post("/messages", async (req, res) => {
     // Create message in database and send it through the event bus
     pgClient.query(queryText, queryValues);
 
-    const event: Buffer = Buffer.from(JSON.stringify({ type: "MessageCreated", data: req.body }));
-    confirmChannel.publish("event-bus", "message-events", event);
+    const event: MessageCreated = { key: "MessageCreated", data: req.body };
+    confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
     res.send(`Sent event of type MessageCreated`);
   } catch (err) {

@@ -28,7 +28,7 @@ app.post("/rooms", async (req, res) => {
     title: z.string(),
     about: z.string(),
     duration: z.number(),
-    roomType: z.literal("message") || z.literal("poll"),
+    roomType: z.string(),
   });
 
   try {
@@ -46,6 +46,9 @@ app.post("/rooms", async (req, res) => {
     // send event to rabbitMQ
     const event: RoomCreated = { key: "RoomCreated", data: result.rows[0] };
     confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+
+    const expiredEvent = { key: "RoomExpired", data: { roomId: result.rows[0].id } };
+    confirmChannel.publish("event-bus", "RoomExpired", Buffer.from(JSON.stringify(expiredEvent)));
 
     // Send copy of the room created back to client
     res.send(result.rows[0]);
