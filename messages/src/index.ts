@@ -5,7 +5,7 @@ import { RoomData, Event } from "./types";
 import { createClient } from "redis";
 
 // Connect to service specific database
-const pgClient = new pg.Client({
+const pgClient = new pg.Pool({
   user: "postgres",
   password: "postgres",
   host: "messages-db",
@@ -47,11 +47,11 @@ eventBusChannel?.consume(queue, async (message: amqplib.ConsumeMessage | null) =
       case "RoomCreated": {
         const { userId, title, about, duration, roomType, expired } = data;
         if (roomType === "messages") {
-          const queryText = "INSERT INTO rooms(userId, title, about, duration, roomType, expired) VALUES($1, $2, $3, $4, $5, $6) RETURNING *";
+          const query = "INSERT INTO rooms(userId, title, about, duration, roomType, expired) VALUES($1, $2, $3, $4, $5, $6) RETURNING *";
           const queryValues = [userId, title, about, duration, roomType, expired];
 
           try {
-            pgClient.query(queryText, queryValues).then((res) => {
+            pgClient.query(query, queryValues).then((res) => {
               console.log(res.rows[0]);
             });
           } catch (err) {
@@ -89,16 +89,12 @@ app.post("/messages", async (req, res) => {
     const queryValues = [roomId, content];
 
     // Create message in database and send it through the event bus
-    try {
-      pgClient.query(queryText, queryValues);
+    pgClient.query(queryText, queryValues);
 
-      const event: Buffer = Buffer.from(JSON.stringify({ type: "MessageCreated", data: req.body }));
-      eventBusChannel?.publish("event-bus", "message-events", event);
+    const event: Buffer = Buffer.from(JSON.stringify({ type: "MessageCreated", data: req.body }));
+    eventBusChannel?.publish("event-bus", "message-events", event);
 
-      res.send(`Sent event of type MessageCreated`);
-    } catch (err) {
-      res.status(500).send({ error: err });
-    }
+    res.send(`Sent event of type MessageCreated`);
   } catch (err) {
     res.status(500).send({ error: err });
   }
