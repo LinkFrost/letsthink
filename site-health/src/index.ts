@@ -1,26 +1,16 @@
 import amqplib from "amqplib";
+import initRabbit from "./initRabbit.js";
+import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, UserCreated, HTTPRequest } from "./events.js";
 
-// Connect to rabbitmq, create a channel
-const eventBusConnection: amqplib.Connection = await amqplib.connect("amqp://event-bus:5672");
-const eventBusChannel: amqplib.Channel = await eventBusConnection.createChannel();
-
-const queue: string = "site-health";
-const exchange: string = "event-bus";
-
-// Create exchange
-eventBusChannel.assertExchange(exchange, "direct", {
-  durable: false,
-});
-
-const eventKeys: string[] = ["room-events", "message-events", "moderator-events", "vote-events", "expiration-events"];
-
-// Create queue for service
-eventBusChannel.assertQueue(queue);
-
-// Subscribe to each event key
-eventKeys.forEach((key: string) => {
-  eventBusChannel.bindQueue(queue, exchange, key);
-});
+const { eventBusChannel, confirmChannel } = await initRabbit("site-health", [
+  "RoomCreated",
+  "RoomExpired",
+  "MessageVoted",
+  "MessageModerated",
+  "PollVoted",
+  "HTTPRequest",
+  "UserCreated",
+]);
 
 interface SiteHealthData {
   totalRooms: number;
@@ -35,88 +25,20 @@ interface SiteHealthData {
   errorRate: number;
 }
 
-interface RoomExpiredEvent {
-  type: "RoomExpired";
-  data: {
-    roomId: string;
-    expiredData: string;
-  };
-}
-
-interface RoomCreatedEvent {
-  type: "RoomCreated";
-  data: {
-    roomType: "message" | "poll";
-    userId: string;
-    title: string;
-    description: string;
-  };
-}
-
-interface MessageModeratedEvent {
-  type: "MessageModerated";
-  data: {
-    userId: string;
-    roomId: string;
-    content: string;
-    moderated: "pending" | "accepted" | "rejected";
-  };
-}
-
-interface UserCreatedEvent {
-  type: "UserCreated";
-  data: {
-    id: string;
-    email: string;
-    username: string;
-    password: string;
-  };
-}
-
-interface PollVotedEvent {
-  type: "PollVoted";
-  data: {
-    id: string;
-    email: string;
-    username: string;
-    password: string;
-  };
-}
-
-interface MessageVotedEvent {
-  type: "MessageVoted";
-  data: {
-    id: string;
-    email: string;
-    username: string;
-    password: string;
-  };
-}
-
-interface MessageCreatedEvent {
-  type: "MessageCreated";
-  data: {
-    userId: string;
-    roomId: string;
-    content: string;
-  };
-}
-
-type Event = RoomCreatedEvent | MessageCreatedEvent | RoomExpiredEvent | any;
+type Event = RoomCreated | RoomExpired | MessageModerated | UserCreated | PollVoted | MessageVoted | HTTPRequest;
 
 // Listen for incoming messages
-eventBusChannel.consume(queue, (message: amqplib.ConsumeMessage | null) => {
+eventBusChannel.consume("site-health", (message) => {
   if (message !== null) {
-    const { type, data }: Event = JSON.parse(message.content.toString());
+    const { key, data }: Event = JSON.parse(message.content.toString());
+    const siteHealthData: SiteHealthData = fetchSiteHealthData();
 
-    switch (type) {
-      case "RoomExpired": {
-        const siteHealthData: SiteHealthData = fetchSiteHealthData();
+    switch (key) {
+      case "RoomExpired":
         siteHealthData.expiredRooms += 1;
         updateDatabase(siteHealthData);
-      }
-      case "RoomCreated": {
-        const siteHealthData: SiteHealthData = fetchSiteHealthData();
+        break;
+      case "RoomCreated":
         siteHealthData.totalRooms += 1;
         siteHealthData.activeRooms += 1;
 
@@ -126,31 +48,26 @@ eventBusChannel.consume(queue, (message: amqplib.ConsumeMessage | null) => {
           siteHealthData.pollRooms += 1;
         }
         updateDatabase(siteHealthData);
-      }
+        break;
       case "MessageModerated": {
         if (data.moderated === "accepted") {
-          const siteHealthData: SiteHealthData = fetchSiteHealthData();
           siteHealthData.totalMessages += 1;
           updateDatabase(siteHealthData);
         }
       }
       case "UserCreated": {
-        const siteHealthData: SiteHealthData = fetchSiteHealthData();
         siteHealthData.totalUsers += 1;
         updateDatabase(siteHealthData);
       }
       case "PollVoted": {
-        const siteHealthData: SiteHealthData = fetchSiteHealthData();
         siteHealthData.totalVotes += 1;
         updateDatabase(siteHealthData);
       }
       case "MessageVoted": {
-        const siteHealthData: SiteHealthData = fetchSiteHealthData();
         siteHealthData.totalVotes += 1;
         updateDatabase(siteHealthData);
       }
-      case "RequestError": {
-        const siteHealthData: SiteHealthData = fetchSiteHealthData();
+      case "HTTPRequest": {
         siteHealthData.errorRate += 1;
         updateDatabase(siteHealthData);
       }
