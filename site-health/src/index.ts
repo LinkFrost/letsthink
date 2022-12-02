@@ -54,22 +54,27 @@ eventBusChannel.consume("site-health", (message) => {
           siteHealthData.totalMessages += 1;
           updateDatabase(siteHealthData);
         }
+        break;
       }
       case "UserCreated": {
         siteHealthData.totalUsers += 1;
         updateDatabase(siteHealthData);
+        break;
       }
       case "PollVoted": {
         siteHealthData.totalVotes += 1;
         updateDatabase(siteHealthData);
+        break;
       }
       case "MessageVoted": {
         siteHealthData.totalVotes += 1;
         updateDatabase(siteHealthData);
+        break;
       }
       case "HTTPRequest": {
         siteHealthData.errorRate += 1;
         updateDatabase(siteHealthData);
+        break;
       }
     }
 
