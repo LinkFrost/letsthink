@@ -1,8 +1,24 @@
-import amqplib from "amqplib";
 import express from "express";
 import pg from "pg";
-import { RoomData, Event } from "./types";
-import { createClient } from "redis";
+import cors from "cors";
+import z from "zod";
+import initRabbit from "./initRabbit.js";
+import type { RoomCreated } from "./events.js";
+
+interface RoomData {
+  id: string;
+  userId: string;
+  title: string;
+  about: string;
+  createdate: string;
+  duration: number;
+  roomType: string;
+  expired: boolean;
+}
+
+const queue = "messages";
+
+const { eventBusChannel, confirmChannel } = await initRabbit(queue, ["RoomCreated"]);
 
 // Connect to service specific database
 const pgClient = new pg.Pool({
@@ -14,50 +30,23 @@ const pgClient = new pg.Pool({
 
 await pgClient.connect();
 
-// Connect to rabbitmq, create a channel
-const eventBusConnection: amqplib.Connection = await amqplib.connect("amqp://event-bus:5672");
-const eventBusChannel: amqplib.Channel = await eventBusConnection.createChannel();
-
-const queue: string = "messages";
-const exchange: string = "event-bus";
-
-// Create exchange
-eventBusChannel.assertExchange(exchange, "direct", {
-  durable: false,
-});
-
-// Create queue for service
-eventBusChannel.assertQueue(queue);
-
-const eventKeys: string[] = ["room-events", "vote-events", "moderator-events", "expiration-events"];
-
-// Subscribe to each event key
-eventKeys.forEach((key: string) => {
-  eventBusChannel.bindQueue(queue, exchange, key);
-});
-
 // Listen for incoming messages
-eventBusChannel?.consume(queue, async (message: amqplib.ConsumeMessage | null) => {
+eventBusChannel.consume(queue, async (message) => {
   if (message !== null) {
-    const { type, data }: Event = JSON.parse(message.content.toString());
+    const { key, data } = JSON.parse(message.content.toString());
 
-    console.log(`Received event of type ${type}`);
+    console.log(`Received event of type ${key}`);
 
-    switch (type) {
+    switch (key) {
       case "RoomCreated": {
         const { userId, title, about, duration, roomType, expired } = data;
-        if (roomType === "messages") {
-          const query = "INSERT INTO rooms(userId, title, about, duration, roomType, expired) VALUES($1, $2, $3, $4, $5, $6) RETURNING *";
-          const queryValues = [userId, title, about, duration, roomType, expired];
 
-          try {
-            pgClient.query(query, queryValues).then((res) => {
-              console.log(res.rows[0]);
-            });
-          } catch (err) {
-            console.log(err);
-          }
-        }
+        const queryText = "INSERT INTO rooms(userId, title, about, duration, roomType, expired) VALUES($1, $2, $3, $4, $5, $6) RETURNING *";
+        const queryValues = [userId, title, about, duration, roomType, expired];
+
+        pgClient.query(queryText, queryValues);
+
+        break;
       }
     }
 
@@ -67,9 +56,18 @@ eventBusChannel?.consume(queue, async (message: amqplib.ConsumeMessage | null) =
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 app.post("/messages", async (req, res) => {
+  const reqBody = z.object({
+    roomId: z.string(),
+    content: z.string(),
+  });
+
   try {
+    // Validate body
+    reqBody.parse(req.body);
+
     const { roomId, content } = req.body;
 
     // Check if given roomId matches a valid room and if that room is expired
@@ -92,7 +90,7 @@ app.post("/messages", async (req, res) => {
     pgClient.query(queryText, queryValues);
 
     const event: Buffer = Buffer.from(JSON.stringify({ type: "MessageCreated", data: req.body }));
-    eventBusChannel?.publish("event-bus", "message-events", event);
+    confirmChannel.publish("event-bus", "message-events", event);
 
     res.send(`Sent event of type MessageCreated`);
   } catch (err) {

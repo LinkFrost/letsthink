@@ -5,7 +5,9 @@ import z from "zod";
 import initRabbit from "./initRabbit.js";
 import type { RoomCreated } from "./events.js";
 
-const { eventBusChannel, confirmChannel } = await initRabbit("rooms", []);
+const queue = "rooms";
+
+const { eventBusChannel, confirmChannel } = await initRabbit(queue, []);
 
 const pgClient = new pg.Pool({
   user: "postgres",
@@ -30,10 +32,10 @@ app.post("/rooms", async (req, res) => {
   });
 
   try {
-    // validating body
+    // Validate body
     reqBody.parse(req.body);
 
-    // create query information
+    // Create query information
     const { userId, title, about, duration, roomType } = req.body;
     const query = "INSERT INTO rooms(userId, title, about, duration, roomType) VALUES($1, $2, $3, $4, $5) RETURNING *";
     const queryValues = [userId, title, about, duration, roomType];
@@ -44,9 +46,8 @@ app.post("/rooms", async (req, res) => {
     // send event to rabbitMQ
     const event: RoomCreated = { key: "RoomCreated", data: result.rows[0] };
     confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
-    await confirmChannel.waitForConfirms();
 
-    // send copy of room created back to client
+    // Send copy of the room created back to client
     res.send(result.rows[0]);
   } catch (err) {
     res.send({ error: err });
