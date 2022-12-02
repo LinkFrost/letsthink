@@ -5,6 +5,5 @@ CREATE TABLE rooms (
   about text,
   createDate TIMESTAMP default current_timestamp,
   duration integer,
-  roomType text,
-  expired boolean
+  roomType text
 )
