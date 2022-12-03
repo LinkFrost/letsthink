@@ -5,7 +5,5 @@ export type User = {
 };
 
 export type Session = {
-  session: {
-    user: Partial<User>;
-  };
+  user: User;
 };

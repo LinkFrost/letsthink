@@ -1,22 +1,24 @@
 import { useRouter } from "next/router";
-import { QueryService } from "../services";
+import { RoomsService } from "../services";
 import type { Session } from "../types/types";
 import useHttp from "./useHttp";
 
+const SHOULD_MOCK_AUTH = true;
+
 const mockSession: Session = {
-  session: {
-    user: {
-      id: "clb4aw5a9000008mk9tsf4qcu",
-      username: "test user",
-    },
+  user: {
+    id: "clb4aw5a9000008mk9tsf4qcu",
+    email: "test@test.com",
+    username: "test user",
   },
 };
 
 const useSession = () => {
-  const { data, loading, error } = useHttp<Session>(`${QueryService}/session`);
+  const { data, loading, error } = useHttp<Session>(`${RoomsService}/session`);
 
   let sessionData;
-  if (process?.env?.NEXT_PUBLIC_USE_MOCK_AUTH === "dev") {
+
+  if (SHOULD_MOCK_AUTH) {
     sessionData = { session: mockSession, loading: false, error: false };
   } else {
     sessionData = { session: data, loading, error };
