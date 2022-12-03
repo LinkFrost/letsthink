@@ -35,9 +35,9 @@ try {
       messageRooms: 0,
       totalVotes: 0,
       totalMessages: 0,
-      requestRate: 0,
       totalUsers: 0,
-      errorRate: 0,
+      totalRequests: 0,
+      errors: 0,
     };
 
     await collection.insertOne(doc);
@@ -65,9 +65,9 @@ interface SiteHealthData extends WithId<Document> {
   messageRooms: number;
   totalVotes: number;
   totalMessages: number;
-  requestRate: number;
   totalUsers: number;
-  errorRate: number;
+  totalRequests: number;
+  errors: number;
 }
 
 type Event = RoomCreated | RoomExpired | MessageModerated | UserCreated | PollVoted | MessageVoted | HTTPRequest;
@@ -154,9 +154,16 @@ eventBusChannel.consume("site-health", async (message) => {
         break;
       }
       case "HTTPRequest": {
+        let change = 0;
+
+        if (data.status >= 500) {
+          change = 1;
+        }
+
         const updateDoc = {
           $set: {
-            errorRate: siteHealthData.errorRate + 1,
+            totalRequests: siteHealthData.totalRequests + 1,
+            errors: siteHealthData.errors + change,
           },
         };
 
