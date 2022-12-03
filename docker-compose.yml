@@ -159,6 +159,17 @@ services:
       event-bus:
         condition: service_healthy
 
+  query-db:
+    container_name: letsthink-query-db
+    image: postgres:alpine
+    restart: always
+    ports:
+      - 5444:5432
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - "./query/src/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+
   vote:
     container_name: letsthink-vote
     build: "./vote"
