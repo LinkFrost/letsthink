@@ -1,44 +1,73 @@
 import amqplib from "amqplib";
 import express from "express";
+import initRabbit from "./initRabbit.js";
+import pg from "pg";
+import cors from "cors";
+import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, PollCreated, RoomVisualized, MessageCreated } from "./events.js";
 
-// Connect to rabbitmq, create a channel
-const eventBusConnection = await amqplib.connect("amqp://event-bus:5672");
-const eventBusChannel = await eventBusConnection.createChannel();
+const { eventBusChannel, confirmChannel } = await initRabbit("query", [
+  "RoomCreated",
+  "RoomExpired",
+  "RoomVisualized",
+  "MessageVoted",
+  "MessageModerated",
+  "PollVoted",
+  "PollCreated",
+  "MessageCreated",
+]);
 
-const queue: string = "query";
-const exchange: string = "event-bus";
-
-// Create exchange
-eventBusChannel.assertExchange(exchange, "direct", {
-  durable: false,
+const pgClient = new pg.Pool({
+  user: "postgres",
+  password: "postgres",
+  host: "query-db",
+  port: 5432,
 });
 
-// Create queue for service
-eventBusChannel.assertQueue(queue);
-
-const eventKeys: string[] = ["room-events", "poll-events", "vote-events", "moderator-events", "visualizer-events", "expiration-events"];
-
-// Subscribe to each event key
-eventKeys.forEach((key: string) => {
-  eventBusChannel.bindQueue(queue, exchange, key);
-});
-
-type Event = any;
+await pgClient.connect();
 
 const app = express();
 app.use(express.json());
+app.use(cors());
+
+type Event = RoomCreated | PollCreated | PollVoted | MessageVoted | MessageModerated | RoomVisualized | RoomExpired | MessageCreated;
 
 // Listen for incoming messages
-eventBusChannel?.consume(queue, (message: amqplib.ConsumeMessage | null) => {
+eventBusChannel?.consume("query", (message: amqplib.ConsumeMessage | null) => {
   if (message !== null) {
-    const { type, data }: Event = JSON.parse(message.content.toString());
+    const { key, data }: Event = JSON.parse(message.content.toString());
 
-    switch (type) {
+    switch (key) {
       default:
-      // Insert logic for various events here depending on the type and data
-      // Case for each event type
+      case "RoomCreated": {
+        break;
+      }
+      case "RoomExpired": {
+        break;
+      }
+      case "RoomVisualized": {
+        break;
+      }
+      case "MessageVoted": {
+        break;
+      }
+      case "MessageModerated": {
+        break;
+      }
+      case "PollVoted": {
+        break;
+      }
+      case "PollCreated": {
+        break;
+      }
+      case "MessageCreated": {
+        break;
+      }
     }
 
     eventBusChannel.ack(message);
   }
+});
+
+app.listen(4011, () => {
+  console.log("query service listening on port 4011");
 });
