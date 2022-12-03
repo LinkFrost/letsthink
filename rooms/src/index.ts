@@ -44,19 +44,6 @@ eventBusChannel.consume(queue, (message) => {
   }
 });
 
-app.get("/session", async (req, res) => {
-  const mockSession = {
-    session: {
-      user: {
-        id: "clb4aw5a9000008mk9tsf4qcu",
-        username: "test user",
-      },
-    },
-  };
-
-  res.send(mockSession);
-});
-
 app.post("/rooms", async (req, res) => {
   try {
     const event: Buffer = Buffer.from(JSON.stringify({ type: "RoomCreated", data: req.body }));
