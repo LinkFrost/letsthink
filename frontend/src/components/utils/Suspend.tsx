@@ -6,13 +6,13 @@ type SuspendPropTypes = {
   //   fallback component for error/loading states*
   //   fallback: () => React.ReactNode;
   loading: boolean;
-  errored: boolean;
+  errored?: boolean;
 };
 
 // Will make more robust if need be. For now keeping simple
 // Takes in a loading state and an error state, and blocks until load is resolved.
 // Resolves us of nesting too many ternary operators in our JSX
-const Suspend = ({ children, loading, errored }: SuspendPropTypes) => {
+const Suspend = ({ children, loading, errored = false }: SuspendPropTypes) => {
   if (loading) {
     return <Spinner />;
   }
