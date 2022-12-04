@@ -1,44 +1,24 @@
-import amqplib from "amqplib";
 import express from "express";
+import initRabbit from "./initRabbit.js";
+import type { RoomExpired, RoomCreated } from "./events.js";
 
-// Connect to rabbitmq, create a channel
-const eventBusConnection = await amqplib.connect("amqp://event-bus:5672");
-const eventBusChannel = await eventBusConnection.createChannel();
+const { eventBusChannel } = await initRabbit("expiration", ["RoomCreated"]);
 
-const queue: string = "expiration";
-const exchange: string = "event-bus";
-
-// Create exchange
-eventBusChannel.assertExchange(exchange, "direct", {
-  durable: false,
-});
-
-// Create queue for service
-eventBusChannel.assertQueue(queue);
-
-const eventKeys: string[] = ["room-events"];
-
-// Subscribe to each event key
-eventKeys.forEach((key: string) => {
-  eventBusChannel.bindQueue(queue, exchange, key);
-});
-
-type Event = any;
-
-const app = express();
-app.use(express.json());
+type ConsumeMessage = RoomCreated;
 
 // Listen for incoming messages
-eventBusChannel?.consume(queue, (message: amqplib.ConsumeMessage | null) => {
-  if (message !== null) {
-    const { type, data }: Event = JSON.parse(message.content.toString());
+eventBusChannel.consume("expiration", (message) => {
+  if (message === null) return;
 
-    switch (type) {
-      default:
-      // Insert logic for various events here depending on the type and data
-      // Case for each event type
-    }
+  const { key, data }: ConsumeMessage = JSON.parse(message.content.toString());
 
-    eventBusChannel.ack(message);
+  if (message.fields.routingKey !== key) return;
+
+  switch (key) {
+    case "RoomCreated":
+      console.log(data);
+      break;
   }
+
+  eventBusChannel.ack(message);
 });
