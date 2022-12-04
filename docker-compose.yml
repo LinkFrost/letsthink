@@ -37,17 +37,22 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+      rooms-db:
+        condition: service_healthy
 
   rooms-db:
     container_name: letsthink-rooms-db
     image: postgres:alpine
     restart: always
-    ports:
-      - 5432:5432
     environment:
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - "./rooms/src/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+      - "./rooms/src/init.sql:/docker-entrypoint-initdb.d/init.sql"
+    healthcheck:
+      test: pg_isready --username=postgres
+      interval: 10s
+      timeout: 30s
+      retries: 10
 
   messages:
     container_name: letsthink-messages

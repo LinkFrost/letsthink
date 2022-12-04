@@ -8,18 +8,16 @@ import type { RoomCreated } from "./events.js";
 
 const SECRET = "60d4a0d941aa2dadadb3b813a695fbc1";
 
-const queue = "rooms";
+const { eventBusChannel } = await initRabbit("rooms", []);
 
-const { eventBusChannel, confirmChannel } = await initRabbit(queue, []);
-
-const pgClient = new pg.Pool({
+const postgres = new pg.Pool({
   user: "postgres",
   password: "postgres",
   host: "rooms-db",
   port: 5432,
 });
 
-await pgClient.connect();
+await postgres.connect();
 
 const app = express();
 app.use(express.json());
@@ -61,13 +59,14 @@ app.post("/rooms", verifyToken, async (req, res) => {
     const queryValues = [userId, title, about, duration, roomType];
 
     // run the query
-    const result = await pgClient.query(query, queryValues);
+    const result = await postgres.query(query, queryValues);
 
     // send event to rabbitMQ
     const event: RoomCreated = { key: "RoomCreated", data: result.rows[0] };
-    confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+    eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
-    // Send copy of the room created back to client
+    // send copy of room created back to client
+    // once this is sent, client should assume room id exists but does not know if query/other services are finished handling RoomCreated
     res.send(result.rows[0]);
   } catch (err) {
     res.send({ error: err });
