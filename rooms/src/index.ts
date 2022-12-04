@@ -2,8 +2,11 @@ import express from "express";
 import pg from "pg";
 import cors from "cors";
 import z from "zod";
+import jwt from "jsonwebtoken";
 import initRabbit from "./initRabbit.js";
 import type { RoomCreated } from "./events.js";
+
+const SECRET = "60d4a0d941aa2dadadb3b813a695fbc1";
 
 const { eventBusChannel } = await initRabbit("rooms", []);
 
@@ -20,20 +23,37 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.post("/rooms", async (req, res) => {
+function verifyToken(req: any, res: any, next: any) {
+  const header = req.headers["authorization"];
+  const token = header && header.split(" ")[1];
+
+  if (token == null) {
+    return res.status(400).send({ error: "Invalid auth token!" });
+  }
+
+  jwt.verify(token, SECRET, (err: any, user: any) => {
+    if (err) {
+      return res.status(400).send({ error: err });
+    }
+
+    next();
+  });
+}
+
+app.post("/rooms", verifyToken, async (req, res) => {
   const reqBody = z.object({
     userId: z.string(),
     title: z.string(),
     about: z.string(),
     duration: z.number(),
-    roomType: z.literal("message") || z.literal("poll"),
+    roomType: z.string(),
   });
 
   try {
-    // validating body
+    // Validate body
     reqBody.parse(req.body);
 
-    // create query information
+    // Create query information
     const { userId, title, about, duration, roomType } = req.body;
     const query = "INSERT INTO rooms(userId, title, about, duration, roomType) VALUES($1, $2, $3, $4, $5) RETURNING *";
     const queryValues = [userId, title, about, duration, roomType];

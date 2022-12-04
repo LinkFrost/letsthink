@@ -1,0 +1,12 @@
+export const RoomsService = "http://localhost:4001";
+export const MessagesService = "http://localhost:4002";
+export const PollsService = "http://localhost:4003";
+export const ModeratorService = "http://localhost:4004";
+export const EmailService = "http://localhost:4005";
+export const UsersService = "http://localhost:4006";
+export const AuthService = "http://localhost:4007";
+export const ExpirationService = "http://localhost:4008";
+export const SiteHealthService = "http://localhost-health:4009";
+export const VisualizerService = "http://localhost:4010";
+export const QueryService = "http://localhost:4011";
+export const VoteService = "http://localhost:4012";
