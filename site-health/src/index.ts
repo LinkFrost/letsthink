@@ -194,10 +194,9 @@ app.post("/site-health", async (req, res) => {
   const event: PollVoted = {
     key: "PollVoted",
     data: {
-      id: "string",
-      email: "string",
-      username: "string",
-      password: "string",
+      pollId: "string",
+      roomId: "string",
+      option: "string",
     },
   };
   confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
