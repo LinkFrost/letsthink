@@ -1,60 +1,173 @@
 import amqplib from "amqplib";
+import initRabbit from "./initRabbit.js";
+import express from "express";
+import cors from "cors";
+import { MongoClient, WithId, ObjectId } from "mongodb";
 
-// Connect to rabbitmq, create a channel
-const eventBusConnection: amqplib.Connection = await amqplib.connect("amqp://event-bus:5672");
-const eventBusChannel: amqplib.Channel = await eventBusConnection.createChannel();
+import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, UserCreated, HTTPRequest } from "./events.js";
 
-const queue: string = "site-health";
-const exchange: string = "event-bus";
+const app = express();
+app.use(express.json());
+app.use(cors());
 
-// Create exchange
-eventBusChannel.assertExchange(exchange, "direct", {
-  durable: false,
-});
+const uri = "mongodb://root:rootpassword@letsthink-site-health-db:27017/?authMechanism=DEFAULT";
+const client = new MongoClient(uri);
+const database = client.db("site-health");
+const collection = database.collection("site-health-data");
 
-const eventKeys: string[] = ["room-events", "message-events", "moderator-events", "vote-events", "expiration-events"];
+// Initializing db
+try {
+  // create a document to insert
+  const findResult = (await collection.find().toArray()) as SiteHealthData[];
 
-// Create queue for service
-eventBusChannel.assertQueue(queue);
+  let docs: SiteHealthData[] = [];
 
-// Subscribe to each event key
-eventKeys.forEach((key: string) => {
-  eventBusChannel.bindQueue(queue, exchange, key);
-});
+  await findResult.forEach((doc) => {
+    docs.push(doc);
+  });
 
-interface RoomCreatedEvent {
-  type: "RoomCreated";
-  data: {
-    roomType: string;
-    userId: string;
-    title: string;
-    description: string;
-  };
+  if (docs.length < 1) {
+    const doc = {
+      totalRooms: 0,
+      activeRooms: 0,
+      expiredRooms: 0,
+      pollRooms: 0,
+      messageRooms: 0,
+      totalVotes: 0,
+      totalMessages: 0,
+      totalUsers: 0,
+      totalRequests: 0,
+      errors: 0,
+    };
+
+    await collection.insertOne(doc);
+  }
+} catch (e) {
+  console.log(e);
 }
 
-interface MessageCreatedEvent {
-  type: "MessageCreated";
-  data: {
-    userId: string;
-    roomId: string;
-    content: string;
-  };
+const { eventBusChannel, confirmChannel } = await initRabbit("site-health", [
+  "RoomCreated",
+  "RoomExpired",
+  "MessageVoted",
+  "MessageModerated",
+  "PollVoted",
+  "HTTPRequest",
+  "UserCreated",
+]);
+
+interface SiteHealthData extends WithId<Document> {
+  _id: ObjectId;
+  totalRooms: number;
+  activeRooms: number;
+  expiredRooms: number;
+  pollRooms: number;
+  messageRooms: number;
+  totalVotes: number;
+  totalMessages: number;
+  totalUsers: number;
+  totalRequests: number;
+  errors: number;
 }
 
-type Event = RoomCreatedEvent | MessageCreatedEvent;
+type Event = RoomCreated | RoomExpired | MessageModerated | UserCreated | PollVoted | MessageVoted | HTTPRequest;
 
 // Listen for incoming messages
-eventBusChannel.consume(queue, (message: amqplib.ConsumeMessage | null) => {
+eventBusChannel.consume("site-health", async (message) => {
   if (message !== null) {
-    const { type, data }: Event = JSON.parse(message.content.toString());
+    const { key, data }: Event = JSON.parse(message.content.toString());
+    const siteHealthData: SiteHealthData = await fetchSiteHealthData();
 
-    switch (type) {
-      case "RoomCreated": {
-        console.log(`A ${data.roomType} room named ${data.title} was created by user with id ${data.userId}`);
+    switch (key) {
+      case "RoomExpired": {
+        const updateDoc = {
+          $set: {
+            expiredRooms: siteHealthData.expiredRooms + 1,
+          },
+        };
+
+        const result = await collection.updateOne({}, updateDoc);
         break;
       }
-      case "MessageCreated": {
-        console.log(`A message was created in room ${data.roomId} with the following content: ${data.content}`);
+      case "RoomCreated": {
+        if (data.roomType === "message") {
+          const updateDoc = {
+            $set: {
+              totalRooms: siteHealthData.totalRooms + 1,
+              activeRooms: siteHealthData.activeRooms + 1,
+              messageRooms: siteHealthData.messageRooms + 1,
+            },
+          };
+          const result = await collection.updateOne({}, updateDoc);
+        } else {
+          const updateDoc = {
+            $set: {
+              totalRooms: siteHealthData.totalRooms + 1,
+              activeRooms: siteHealthData.activeRooms + 1,
+              pollRooms: siteHealthData.pollRooms + 1,
+            },
+          };
+          const result = await collection.updateOne({}, updateDoc);
+        }
+        break;
+      }
+      case "MessageModerated": {
+        if (data.moderated === "accepted") {
+          const updateDoc = {
+            $set: {
+              totalMessages: siteHealthData.totalMessages + 1,
+            },
+          };
+
+          const result = await collection.updateOne({}, updateDoc);
+        }
+        break;
+      }
+      case "UserCreated": {
+        const updateDoc = {
+          $set: {
+            totalUsers: siteHealthData.totalUsers + 1,
+          },
+        };
+
+        const result = await collection.updateOne({}, updateDoc);
+        break;
+      }
+      case "PollVoted": {
+        const updateDoc = {
+          $set: {
+            totalVotes: siteHealthData.totalVotes + 1,
+          },
+        };
+
+        const result = await collection.updateOne({}, updateDoc);
+        break;
+      }
+      case "MessageVoted": {
+        const updateDoc = {
+          $set: {
+            totalVotes: siteHealthData.totalVotes + 1,
+          },
+        };
+
+        const result = await collection.updateOne({}, updateDoc);
+        break;
+      }
+      case "HTTPRequest": {
+        let change = 0;
+
+        if (data.status >= 500) {
+          change = 1;
+        }
+
+        const updateDoc = {
+          $set: {
+            totalRequests: siteHealthData.totalRequests + 1,
+            errors: siteHealthData.errors + change,
+          },
+        };
+
+        const result = await collection.updateOne({}, updateDoc);
         break;
       }
     }
@@ -62,4 +175,36 @@ eventBusChannel.consume(queue, (message: amqplib.ConsumeMessage | null) => {
     // Acknowledge the message to the queue
     eventBusChannel.ack(message);
   }
+});
+
+const fetchSiteHealthData = async () => {
+  const findResult = (await collection.find().toArray()) as SiteHealthData[];
+
+  let docs: SiteHealthData[] = [];
+
+  await findResult.forEach((doc) => {
+    docs.push(doc);
+  });
+
+  return docs[0];
+};
+
+app.post("/site-health", async (req, res) => {
+  // send event to rabbitMQ
+  const event: PollVoted = {
+    key: "PollVoted",
+    data: {
+      id: "string",
+      email: "string",
+      username: "string",
+      password: "string",
+    },
+  };
+  confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+  await confirmChannel.waitForConfirms();
+  res.send(200);
+});
+
+app.listen(4009, () => {
+  console.log("site health service listening on port 4009");
 });

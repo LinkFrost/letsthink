@@ -1,5 +1,4 @@
 node_modules/
+build/
 .DS_Store
-install_modules.sh
-remove_modules.sh
 .env

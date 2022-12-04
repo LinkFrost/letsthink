@@ -38,6 +38,17 @@ services:
       event-bus:
         condition: service_healthy
 
+  rooms-db:
+    container_name: letsthink-rooms-db
+    image: postgres:alpine
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - "./rooms/src/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+
   messages:
     container_name: letsthink-messages
     build: "./messages"
@@ -126,6 +137,15 @@ services:
       event-bus:
         condition: service_healthy
 
+  site-health-db:
+    container_name: letsthink-site-health-db
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - 27017:27017
+
   visualizer:
     container_name: letsthink-visualizer
     build: "./visualizer"
@@ -147,6 +167,17 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+
+  query-db:
+    container_name: letsthink-query-db
+    image: postgres:alpine
+    restart: always
+    ports:
+      - 5444:5432
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - "./query/src/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
 
   vote:
     container_name: letsthink-vote

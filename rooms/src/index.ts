@@ -1,59 +1,58 @@
-import amqplib from "amqplib";
 import express from "express";
-import { traceDeprecation } from "process";
+import pg from "pg";
+import cors from "cors";
+import z from "zod";
+import initRabbit from "./initRabbit.js";
+import type { RoomCreated } from "./events.js";
 
-// Connect to rabbitmq, create a channel
-const eventBusConnection = await amqplib.connect("amqp://event-bus:5672");
-const eventBusChannel = await eventBusConnection.createChannel();
+const { eventBusChannel, confirmChannel } = await initRabbit("rooms", []);
 
-const queue: string = "rooms";
-const exchange: string = "event-bus";
-
-// Create exchange
-eventBusChannel.assertExchange(exchange, "direct", {
-  durable: false,
+const pgClient = new pg.Pool({
+  user: "postgres",
+  password: "postgres",
+  host: "rooms-db",
+  port: 5432,
 });
 
-// Create queue for service
-eventBusChannel.assertQueue(queue);
-
-const eventKeys: string[] = ["expiration-events"];
-
-// Subscribe to each event key
-eventKeys.forEach((key: string) => {
-  eventBusChannel.bindQueue(queue, exchange, key);
-});
-
-type Event = any;
+await pgClient.connect();
 
 const app = express();
 app.use(express.json());
-
-// Listen for incoming messages
-eventBusChannel.consume(queue, (message) => {
-  if (message !== null) {
-    const { type, data }: Event = JSON.parse(message.content.toString());
-
-    switch (type) {
-      default:
-      // Insert logic for various events here depending on the type and data
-      // Case for each event type
-    }
-
-    eventBusChannel.ack(message);
-  }
-});
+app.use(cors());
 
 app.post("/rooms", async (req, res) => {
+  const reqBody = z.object({
+    userId: z.string(),
+    title: z.string(),
+    about: z.string(),
+    duration: z.number(),
+    roomType: z.literal("message") || z.literal("poll"),
+  });
+
   try {
-    const event: Buffer = Buffer.from(JSON.stringify({ type: "RoomCreated", data: req.body }));
-    eventBusChannel?.publish("event-bus", "room-events", event);
-    res.send(`Sent event of type RoomCreated`);
+    // validating body
+    reqBody.parse(req.body);
+
+    // create query information
+    const { userId, title, about, duration, roomType } = req.body;
+    const query = "INSERT INTO rooms(userId, title, about, duration, roomType) VALUES($1, $2, $3, $4, $5) RETURNING *";
+    const queryValues = [userId, title, about, duration, roomType];
+
+    // run the query
+    const result = await pgClient.query(query, queryValues);
+
+    // send event to rabbitMQ
+    const event: RoomCreated = { key: "RoomCreated", data: result.rows[0] };
+    confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+    await confirmChannel.waitForConfirms();
+
+    // send copy of room created back to client
+    res.send(result.rows[0]);
   } catch (err) {
     res.send({ error: err });
   }
 });
 
 app.listen(4001, () => {
-  console.log("Listening on port 4001");
+  console.log("rooms service listening on port 4001");
 });
