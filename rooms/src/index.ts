@@ -23,9 +23,17 @@ await pgClient.connect();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    allowedHeaders: ["Authorization", "Content-Type", "Access-Control-Allow-Credentials"],
+    exposedHeaders: ["Authorization"],
+  })
+);
 
 function verifyToken(req: any, res: any, next: any) {
+  console.log(req.headers);
   const header = req.headers["authorization"];
   const token = header && header.split(" ")[1];
 

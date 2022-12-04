@@ -27,7 +27,14 @@ await redisClient.connect();
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    allowedHeaders: ["Authorization", "Content-Type", "Access-Control-Allow-Credentials"],
+    exposedHeaders: ["Authorization"],
+  })
+);
 app.use(cookieParser());
 
 app.post("/refresh", async (req, res) => {
@@ -88,31 +95,34 @@ app.post("/login", async (req, res) => {
 
     await redisClient.set(refreshToken, userData.id);
 
-    res
-      .set("Authorization", "Bearer " + accessToken)
+    return res
+      .header("Access-Control-Expose-Headers", "Authorization")
+      .header("Access-Control-Allow-Headers", "Authorization,Content-Type,Content-Length")
+      .header("Authorization", "Bearer " + accessToken)
       .status(200)
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false,
+        secure: true,
+        sameSite: true,
       })
-      .send("Successfully authorized");
+      .send({ success: "Successfully authorized" });
   } catch (err) {
-    res.status(500).send({ error: err });
+    return res.status(500).send({ error: err });
   }
 });
 
-app.delete("/signout", async (req, res) => {
+app.delete("/logout", async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken || !(await redisClient.get(refreshToken))) {
-    return res.status(400).send("Refresh token does not exist!");
+    return res.status(400).send({ success: "Refresh token does not exist!" });
   }
 
   await redisClient.del(refreshToken);
 
   req.cookies.destroy;
 
-  return res.clearCookie("refreshToken").status(200).send("Successfully signed out");
+  return res.clearCookie("refreshToken").status(200).send({ success: "Successfully signed out" });
 });
 
 app.listen(4007, () => {
