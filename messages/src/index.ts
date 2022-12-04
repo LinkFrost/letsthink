@@ -100,6 +100,20 @@ app.post("/messages", async (req, res) => {
   }
 });
 
+app.post("/signup", async (req, res) => {
+  try {
+    // Validate body
+    const { id, email, username, password } = req.body;
+
+    const event = { key: "UserCreated", data: req.body };
+    confirmChannel.publish("event-bus", "UserCreated", Buffer.from(JSON.stringify(event)));
+
+    res.send(`Sent event of type UserCreated`);
+  } catch (err) {
+    res.status(500).send({ error: err });
+  }
+});
+
 app.listen(4002, () => {
   console.log("Listening on port 4002");
 });

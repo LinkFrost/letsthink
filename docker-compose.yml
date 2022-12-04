@@ -126,16 +126,36 @@ services:
   #     event-bus:
   #       condition: service_healthy
 
-  # authenticator:
-  #   container_name: letsthink-authenticator
-  #   build: "./authenticator"
-  #   ports:
-  #     - 4007:4007
-  #   volumes:
-  #     - "./authenticator/src:/usr/app/src"
-  #   depends_on:
-  #     event-bus:
-  #       condition: service_healthy
+  users-db:
+    container_name: letsthink-users-db
+    image: postgres:alpine
+    restart: always
+    ports:
+      - 5437:5432
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - "./users/src/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+
+  authenticator:
+    container_name: letsthink-authenticator
+    build: "./authenticator"
+    ports:
+      - 4007:4007
+    volumes:
+      - "./authenticator/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
+
+  authenticator-cache:
+    container_name: letsthink-authenticator-cache
+    image: redis:alpine
+    restart: always
+    ports:
+      - 6397:6397
+    volumes:
+      - ./authenticator/session-cache:/data
 
   expiration:
     container_name: letsthink-expiration

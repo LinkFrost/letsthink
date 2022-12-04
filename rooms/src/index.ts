@@ -2,8 +2,11 @@ import express from "express";
 import pg from "pg";
 import cors from "cors";
 import z from "zod";
+import jwt from "jsonwebtoken";
 import initRabbit from "./initRabbit.js";
 import type { RoomCreated } from "./events.js";
+
+const SECRET = "60d4a0d941aa2dadadb3b813a695fbc1";
 
 const queue = "rooms";
 
@@ -22,7 +25,24 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-app.post("/rooms", async (req, res) => {
+function verifyToken(req: any, res: any, next: any) {
+  const header = req.headers["authorization"];
+  const token = header && header.split(" ")[1];
+
+  if (token == null) {
+    return res.status(400).send({ error: "Invalid auth token!" });
+  }
+
+  jwt.verify(token, SECRET, (err: any, user: any) => {
+    if (err) {
+      return res.status(400).send({ error: err });
+    }
+
+    next();
+  });
+}
+
+app.post("/rooms", verifyToken, async (req, res) => {
   const reqBody = z.object({
     userId: z.string(),
     title: z.string(),
@@ -46,9 +66,6 @@ app.post("/rooms", async (req, res) => {
     // send event to rabbitMQ
     const event: RoomCreated = { key: "RoomCreated", data: result.rows[0] };
     confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
-
-    const expiredEvent = { key: "RoomExpired", data: { roomId: result.rows[0].id } };
-    confirmChannel.publish("event-bus", "RoomExpired", Buffer.from(JSON.stringify(expiredEvent)));
 
     // Send copy of the room created back to client
     res.send(result.rows[0]);
