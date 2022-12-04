@@ -1,12 +1,19 @@
 import { FormEvent, useEffect, useState } from "react";
 
 import Head from "next/head";
+import useSession from "../utils/hooks/useSession";
+import { useRouter } from "next/router";
+import Suspend from "../components/utils/Suspend";
 
 // Remove Login Header For This Page
 
 export default function Home() {
+  const { session, loading, error } = useSession();
+  const [checkingForRedirect, setCheckingForRedirect] = useState(true);
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+
+  const router = useRouter();
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     const trigger = () => {
@@ -24,6 +31,14 @@ export default function Home() {
     cleanup();
   };
 
+  useEffect(() => {
+    if (session && router.pathname === "/login") {
+      router.replace("/");
+    } else {
+      setCheckingForRedirect(false);
+    }
+  }, [router, session]);
+
   return (
     <>
       <div className="p-10">
@@ -33,28 +48,30 @@ export default function Home() {
           <link rel="icon" href="/favicon.ico" />
         </Head>
       </div>
-      <h1 className="text-white">Login</h1>
-      <form className="bg-white" onSubmit={handleSubmit}>
-        <label htmlFor="usernameInput">Email</label>
-        <input
-          id="usernameInput"
-          className="text-black"
-          value={username}
-          onChange={(e) => {
-            setUsername(e.target.value);
-          }}
-        ></input>
-        <label htmlFor="passwordInput">Password</label>
-        <input
-          id="passwordInput"
-          className="text-black"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-          }}
-        ></input>
-        <button className="bg-white-500/100">Login</button>
-      </form>
+      <Suspend loading={loading || checkingForRedirect}>
+        <h1 className="text-white">Login</h1>
+        <form className="bg-white" onSubmit={handleSubmit}>
+          <label htmlFor="usernameInput">Email</label>
+          <input
+            id="usernameInput"
+            className="text-black"
+            value={username}
+            onChange={(e) => {
+              setUsername(e.target.value);
+            }}
+          ></input>
+          <label htmlFor="passwordInput">Password</label>
+          <input
+            id="passwordInput"
+            className="text-black"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+            }}
+          ></input>
+          <button className="bg-white-500/100">Login</button>
+        </form>
+      </Suspend>
     </>
   );
 }
