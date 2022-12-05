@@ -20,13 +20,7 @@ try {
   // create a document to insert
   const findResult = (await collection.find().toArray()) as SiteHealthData[];
 
-  let docs: SiteHealthData[] = [];
-
-  await findResult.forEach((doc) => {
-    docs.push(doc);
-  });
-
-  if (docs.length < 1) {
+  if (findResult.length < 1) {
     const doc = {
       totalRooms: 0,
       activeRooms: 0,
@@ -180,29 +174,23 @@ eventBusChannel.consume("site-health", async (message) => {
 const fetchSiteHealthData = async () => {
   const findResult = (await collection.find().toArray()) as SiteHealthData[];
 
-  let docs: SiteHealthData[] = [];
-
-  await findResult.forEach((doc) => {
-    docs.push(doc);
-  });
-
-  return docs[0];
+  return findResult[0];
 };
 
-app.post("/site-health", async (req, res) => {
-  // send event to rabbitMQ
-  const event: PollVoted = {
-    key: "PollVoted",
-    data: {
-      id: "string",
-      email: "string",
-      username: "string",
-      password: "string",
-    },
-  };
-  confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
-  await confirmChannel.waitForConfirms();
-  res.send(200);
+app.get("/site-health", async (req, res) => {
+  const siteHealthData: SiteHealthData = await fetchSiteHealthData();
+  res.send({
+    totalRooms: siteHealthData.totalRooms,
+    activeRooms: siteHealthData.activeRooms,
+    expiredRooms: siteHealthData.expiredRooms,
+    pollRooms: siteHealthData.pollRooms,
+    messageRooms: siteHealthData.messageRooms,
+    totalVotes: siteHealthData.totalVotes,
+    totalMessages: siteHealthData.totalMessages,
+    totalUsers: siteHealthData.totalUsers,
+    totalRequests: siteHealthData.totalRequests,
+    errors: siteHealthData.errors,
+  });
 });
 
 app.listen(4009, () => {

@@ -58,20 +58,18 @@ export interface UserCreated extends Event {
 export interface PollVoted extends Event {
   key: "PollVoted";
   data: {
-    id: string;
-    email: string;
-    username: string;
-    password: string;
+    pollId: string;
+    roomId: string;
+    option: string;
   };
 }
 
 export interface MessageVoted extends Event {
   key: "MessageVoted";
   data: {
-    id: string;
-    email: string;
-    username: string;
-    password: string;
+    messageId: string;
+    roomId: string;
+    vote: number;
   };
 }
 
