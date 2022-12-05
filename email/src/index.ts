@@ -1,44 +1,44 @@
-import amqplib from "amqplib";
-import express from "express";
+import * as dotenv from "dotenv";
+import { EventKeys, RoomVisualized } from "./util/events.js";
+import initExpress from "./init/initExpress.js";
+import initEventBus from "./init/initRabbit.js";
+import sendInBlue from "./util/sendInBlue.js";
 
-// Connect to rabbitmq, create a channel
-const eventBusConnection = await amqplib.connect("amqp://event-bus:5672");
-const eventBusChannel = await eventBusConnection.createChannel();
+// Event Types that email service is interested in
+type Event = RoomVisualized;
 
-const queue: string = "email";
-const exchange: string = "event-bus";
+const q = "email";
+const subscriptions: EventKeys[] = ["RoomVisualized"];
 
-// Create exchange
-eventBusChannel.assertExchange(exchange, "direct", {
-  durable: false,
-});
+// Initialize outside communications
+dotenv.config();
+const { eventBusChannel, confirmChannel } = await initEventBus(q, subscriptions);
+const { server } = await initExpress();
+const { sendEmail } = await sendInBlue();
 
-// Create queue for service
-eventBusChannel.assertQueue(queue);
+// Handle Event Bus Subscriptions
+eventBusChannel.consume(q, (message) => {
+  if (!message) return;
 
-const eventKeys: string[] = ["visualizer-events"];
+  const { key, data }: Event = JSON.parse(message.content.toString());
 
-// Subscribe to each event key
-eventKeys.forEach((key: string) => {
-  eventBusChannel.bindQueue(queue, exchange, key);
-});
-
-type Event = any;
-
-const app = express();
-app.use(express.json());
-
-// Listen for incoming messages
-eventBusChannel?.consume(queue, (message: amqplib.ConsumeMessage | null) => {
-  if (message !== null) {
-    const { type, data }: Event = JSON.parse(message.content.toString());
-
-    switch (type) {
-      default:
-      // Insert logic for various events here depending on the type and data
-      // Case for each event type
-    }
-
-    eventBusChannel.ack(message);
+  switch (key) {
+    case "RoomVisualized":
+      sendEmail(data);
+      break;
+    default:
   }
+
+  eventBusChannel.ack(message);
+});
+
+// REST Server
+server.post("/testSend", (req, res) => {
+  const event: RoomVisualized = { key: "RoomVisualized", data: req.body };
+  confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+  res.send(200);
+});
+
+server.listen(4005, () => {
+  console.log("Email service listening on port 4005");
 });
