@@ -119,6 +119,15 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+  
+  site-email:
+    container_name: letsthink-email-db
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - 27018:27017
 
   # users:
   #   container_name: letsthink-users
