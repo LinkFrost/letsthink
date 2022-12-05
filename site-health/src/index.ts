@@ -2,6 +2,8 @@ import amqplib from "amqplib";
 import initRabbit from "./initRabbit.js";
 import express from "express";
 import cors from "cors";
+import * as dotenv from "dotenv";
+dotenv.config();
 import { MongoClient, WithId, ObjectId } from "mongodb";
 
 import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, UserCreated, HTTPRequest } from "./events.js";
@@ -10,10 +12,22 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const uri = "mongodb://root:rootpassword@letsthink-site-health-db:27017/?authMechanism=DEFAULT";
+if (!process.env.MONGO_URI) {
+  throw new Error("missing MONGO_URI environment variable");
+}
+
+if (!process.env.MONGO_DB_NAME) {
+  throw new Error("missing MONGO_DB_NAME environment variable");
+}
+
+if (!process.env.MONGO_COLLECTION_NAME) {
+  throw new Error("missing MONGO_COLLECTION_NAME environment variable");
+}
+
+const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);
-const database = client.db("site-health");
-const collection = database.collection("site-health-data");
+const database = client.db(process.env.MONGO_DB_NAME);
+const collection = database.collection(process.env.MONGO_COLLECTION_NAME);
 
 // Initializing db
 try {
