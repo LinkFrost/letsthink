@@ -3,7 +3,6 @@ import initExpress from "./init/initExpress.js";
 import initEventBus from "./init/initRabbit.js";
 import sendInBlue from "./util/sendInBlue.js";
 import initMongo from "./init/initMongo.js";
-import { z } from "zod";
 
 // Event Types that email service is interested in
 type Event = RoomVisualized;
