@@ -1,9 +1,13 @@
-CREATE TABLE rooms (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  userId text,
-  title text,
-  about text,
-  createDate TIMESTAMP WITH TIME ZONE default CURRENT_TIMESTAMP,
-  duration integer,
-  roomType text
-)
+CREATE TABLE rooms {
+  id UUID PRIMARY KEY
+}
+
+CREATE TABLE messages {
+  id UUID PRIMARY KEY,
+  votes INTEGER DEFAULT 0
+}
+
+CREATE TABLE poll_options {
+  id UUID PRIMARY KEY,
+  votes INTEGER DEFAULT 0
+}

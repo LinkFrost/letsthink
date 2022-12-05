@@ -236,3 +236,17 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+
+  vote-db:
+    container_name: letsthink-vote-db
+    image: postgres:alpine
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - "./vote/src/init.sql:/docker-entrypoint-initdb.d/init.sql"
+    healthcheck:
+      test: pg_isready --username=postgres
+      interval: 10s
+      timeout: 30s
+      retries: 10

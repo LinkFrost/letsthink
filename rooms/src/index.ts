@@ -1,70 +1,31 @@
-import express from "express";
-import pg from "pg";
-import cors from "cors";
+import initRabbit from "./utils/initRabbit.js";
+import initPostgres from "./utils/initPostgres.js";
+import initExpress from "./utils/initExpress.js";
 import z from "zod";
-import jwt from "jsonwebtoken";
-import initRabbit from "./initRabbit.js";
-import type { RoomCreated } from "./events.js";
+import type { RoomCreated } from "./types/events.js";
 
-const SECRET = "60d4a0d941aa2dadadb3b813a695fbc1";
+// initialize rabbitmq, postgres, and express
+const eventBusChannel = await initRabbit("rooms", []);
+const postgres = await initPostgres("rooms-db");
+const app = initExpress(4001);
 
-const { eventBusChannel } = await initRabbit("rooms", []);
-
-const postgres = new pg.Pool({
-  user: "postgres",
-  password: "postgres",
-  host: "rooms-db",
-  port: 5432,
-});
-
-await postgres.connect();
-
-const app = express();
-app.use(express.json());
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-    allowedHeaders: ["Authorization", "Content-Type", "Access-Control-Allow-Credentials"],
-    exposedHeaders: ["Authorization"],
-  })
-);
-
-function verifyToken(req: any, res: any, next: any) {
-  console.log(req.headers);
-  const header = req.headers["authorization"];
-  const token = header && header.split(" ")[1];
-
-  if (token == null) {
-    return res.status(400).send({ error: "Invalid auth token!" });
-  }
-
-  jwt.verify(token, SECRET, (err: any, user: any) => {
-    if (err) {
-      return res.status(400).send({ error: err });
-    }
-
-    next();
-  });
-}
-
-app.post("/rooms", verifyToken, async (req, res) => {
+app.post("/rooms", async (req, res) => {
   const reqBody = z.object({
-    userId: z.string(),
+    user_id: z.string(),
     title: z.string(),
     about: z.string(),
     duration: z.number(),
-    roomType: z.string(),
+    room_type: z.string(),
   });
 
   try {
-    // Validate body
+    // validate body
     reqBody.parse(req.body);
 
-    // Create query information
-    const { userId, title, about, duration, roomType } = req.body;
-    const query = "INSERT INTO rooms(userId, title, about, duration, roomType) VALUES($1, $2, $3, $4, $5) RETURNING *";
-    const queryValues = [userId, title, about, duration, roomType];
+    // create query information
+    const { user_id, title, about, duration, room_type } = req.body;
+    const query = "INSERT INTO rooms(user_id, title, about, duration, room_type) VALUES($1, $2, $3, $4, $5) RETURNING *";
+    const queryValues = [user_id, title, about, duration, room_type];
 
     // run the query
     const result = await postgres.query(query, queryValues);
@@ -73,14 +34,9 @@ app.post("/rooms", verifyToken, async (req, res) => {
     const event: RoomCreated = { key: "RoomCreated", data: result.rows[0] };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
-    // send copy of room created back to client
     // once this is sent, client should assume room id exists but does not know if query/other services are finished handling RoomCreated
     res.send(result.rows[0]);
   } catch (err) {
     res.send({ error: err });
   }
-});
-
-app.listen(4001, () => {
-  console.log("rooms service listening on port 4001");
 });
