@@ -28,11 +28,11 @@ eventBusChannel.consume(queue, async (message) => {
 
     switch (key) {
       case "RoomCreated": {
-        const { id, userid, title, about, createdate, duration, roomtype } = data;
+        const { id, room_type } = data;
 
-        if (roomtype === "message") {
-          const queryText = "INSERT INTO rooms(id, userid, title, about, createdate, duration, roomtype) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING *";
-          const queryValues = [id, userid, title, about, createdate, duration, roomtype];
+        if (room_type === "message") {
+          const queryText = "INSERT INTO rooms(id) VALUES($1) RETURNING *";
+          const queryValues = [id];
 
           pgClient.query(queryText, queryValues);
         }
@@ -41,12 +41,14 @@ eventBusChannel.consume(queue, async (message) => {
       }
 
       case "RoomExpired": {
-        const { roomId } = data;
+        const { room_id, room_type } = data;
 
-        const queryText = "UPDATE rooms SET expired=$1 WHERE id=$2";
-        const queryValues = [true, roomId];
+        if (room_type === "message") {
+          const queryText = "DELETE FROM rooms WHERE id=$1";
+          const queryValues = [room_id];
 
-        pgClient.query(queryText, queryValues);
+          pgClient.query(queryText, queryValues);
+        }
 
         break;
       }
@@ -70,45 +72,31 @@ app.post("/messages", async (req, res) => {
     // Validate body
     reqBody.parse(req.body);
 
-    const { roomId, content } = req.body;
+    const { room_id, content } = req.body;
 
     // Check if given roomId matches a valid room and if that room is expired
-    const roomQueryResults = await pgClient.query("SELECT * FROM rooms WHERE id=$1", [roomId]).then((res) => res.rows);
+    const roomQueryResults = await pgClient.query("SELECT * FROM rooms WHERE id=$1", [room_id]).then((res) => res.rows);
 
     if (roomQueryResults.length !== 1) {
-      return res.status(400).send({ error: `Room with id ${roomId} does not exist!` });
+      return res.status(400).send({ error: `Room with id ${room_id} does not exist!` });
     }
 
     const roomData: RoomData = roomQueryResults[0];
 
     if (roomData.expired) {
-      return res.status(400).send({ error: `Room with id ${roomId} is expired!` });
+      return res.status(400).send({ error: `Room with id ${room_id} is expired!` });
     }
 
     const queryText = "INSERT INTO messages(roomId, content) VALUES($1, $2) RETURNING *";
-    const queryValues = [roomId, content];
+    const queryValues = [room_id, content];
 
     // Create message in database and send it through the event bus
-    pgClient.query(queryText, queryValues);
+    const result = await pgClient.query(queryText, queryValues);
 
-    const event: MessageCreated = { key: "MessageCreated", data: req.body };
+    const event: MessageCreated = { key: "MessageCreated", data: result.rows[0] };
     confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
     res.send(`Sent event of type MessageCreated`);
-  } catch (err) {
-    res.status(500).send({ error: err });
-  }
-});
-
-app.post("/signup", async (req, res) => {
-  try {
-    // Validate body
-    const { id, email, username, password } = req.body;
-
-    const event = { key: "UserCreated", data: req.body };
-    confirmChannel.publish("event-bus", "UserCreated", Buffer.from(JSON.stringify(event)));
-
-    res.send(`Sent event of type UserCreated`);
   } catch (err) {
     res.status(500).send({ error: err });
   }

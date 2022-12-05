@@ -18,12 +18,12 @@ export interface RoomCreated extends Event {
   key: "RoomCreated";
   data: {
     id: string;
-    userId: string;
+    user_id: string;
     title: string;
     about: string;
-    createDate: string;
+    create_date: string;
     duration: number;
-    roomType: "message" | "poll";
+    room_type: "message" | "poll";
   };
 }
 

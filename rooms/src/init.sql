@@ -1,9 +1,9 @@
 CREATE TABLE rooms (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  userId text,
+  user_id text,
   title text,
   about text,
-  createDate TIMESTAMP WITH TIME ZONE default CURRENT_TIMESTAMP,
+  create_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   duration integer,
-  roomType text
+  room_type text
 )

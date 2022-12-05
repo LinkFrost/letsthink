@@ -41,7 +41,8 @@ export interface RoomData {
 export interface MessageCreated extends Event {
   key: "MessageCreated";
   data: {
-    roomId: string;
+    id: string;
+    room_id: string;
     content: string;
   };
 }
