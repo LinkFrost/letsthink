@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "@sendinblue/client": "^3.2.2",
     "amqplib": "^0.10.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "nodemon": "^2.0.20",
     "ts-node": "^10.9.1",
@@ -13,6 +16,7 @@
   },
   "devDependencies": {
     "@types/amqplib": "^0.8.2",
+    "@types/cors": "^2.8.12",
     "@types/express": "^4.17.14",
     "@types/node": "^18.11.9"
   },
