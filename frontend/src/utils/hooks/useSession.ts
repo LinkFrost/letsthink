@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 import { AuthService } from "../services";
 import type { Session } from "../types/types";
 import useHttp from "./useHttp";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // const SHOULD_MOCK_AUTH = false;
 
@@ -15,69 +15,55 @@ import { useState } from "react";
 // };
 
 const useSession = () => {
-  // const { data, loading, error } = useHttp<Session>(`${AuthService}/login`);
-  // let sessionData;
-  // // if (SHOULD_MOCK_AUTH) {
-  // //   sessionData = { session: mockSession, loading: false, error: false };
-  // // } else {
-  // //   sessionData = { session: data, loading, error };
-  // // }
-  // const router = useRouter();
-  // const signIn = async (email: string, password: string) => {
-  //   await fetch(`${AuthService}/login`, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application.json",
-  //     },
-  //     body: JSON.stringify({
-  //       email: email,
-  //       password: password,
-  //     }),
-  //   });
-  //   router.push("/");
-  // };
-  // const signOut = () => {
-  //   // signOutLogic()
-  //   router.push("/login");
-  // };
-  // return { ...sessionData, signIn, signOut };
+  const router = useRouter();
   const [token, setToken] = useState<string | null>("");
+  const { data, loading, error } = useHttp<Session>(`${AuthService}/refresh`);
+  console.log(data);
 
-  const signIn = async (email: string, password: string) => {
-    const res = await fetch(`${AuthService}/login`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: email,
-        password: password,
-      }),
-    });
+  let sessionData;
+  sessionData = { token: data, loading, error };
 
-    const data = await res.json();
+  // return { signIn, signOut };
+};
 
-    if (data.success) {
-      setToken(res.headers.get("authorization"));
-    }
-  };
+export const signIn = async (email: string, password: string) => {
+  const res = await fetch(`${AuthService}/login`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: email,
+      password: password,
+    }),
+  });
 
-  const signOut = async () => {
-    const res = await fetch(`${AuthService}/logout`, {
-      method: "DELETE",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+  const data = await res.json();
 
-    const data = await res.json();
+  if (data.success) {
+    console.log("success");
+    // router.replace("/");
+    // window.location.pathname = "/";
+    // setToken(res.headers.get("authorization"));
+  }
+};
 
-    if (data.success) {
-      setToken(null);
-    }
-  };
+export const signOut = async () => {
+  const res = await fetch(`${AuthService}/logout`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    // setToken(null);
+    window.location.pathname = "/login";
+  }
 };
 
 export default useSession;

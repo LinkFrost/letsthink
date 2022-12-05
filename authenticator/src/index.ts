@@ -8,7 +8,7 @@ import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import type { UserData } from "./events.js";
 
-const SECRET = "60d4a0d941aa2dadadb3b813a695fbc1";
+const SECRET = "sYxxNMQuG7UJHGLXPrMQ4vliNdTapB2zdHP39jqMpjI";
 const REFRESH_SECRET = "397d1fe1c55e51879eb75713d18d9133";
 
 // Connect to service specific database
@@ -37,11 +37,10 @@ app.use(
 );
 app.use(cookieParser());
 
-app.post("/refresh", async (req, res) => {
+app.get("/refresh", async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
-  console.log(refreshToken);
 
-  if (!(await redisClient.get(refreshToken))) {
+  if (!refreshToken || !(await redisClient.get(refreshToken))) {
     return res.status(400).send({ error: "Refresh token doesn't exist" });
   }
 

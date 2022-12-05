@@ -13,11 +13,11 @@ const auth = () => {
       return res.status(400).send({ error: "Invalid auth token!" });
     }
 
-    if (!process.env.JWT_ACCESS_TOKEN) {
-      throw new Error("missing JWT_ACCESS_TOKEN environment variable");
+    if (!process.env.JWT_ACCESS_SECRET) {
+      throw new Error("missing JWT_ACCESS_SECRET environment variable");
     }
 
-    jwt.verify(token, process.env.JWT_ACCESS_TOKEN, (err: any, user: any) => {
+    jwt.verify(token, process.env.JWT_ACCESS_SECRET, (err: any, user: any) => {
       if (err) {
         return res.status(400).send({ error: err });
       }
