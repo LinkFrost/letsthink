@@ -61,7 +61,7 @@ app.get("/refresh", async (req, res) => {
     return res
       .set("Authorization", "Bearer " + accessToken)
       .status(200)
-      .send("Generated new access token");
+      .send({ success: "Generated new access token" });
   });
 });
 
