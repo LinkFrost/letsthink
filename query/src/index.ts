@@ -3,6 +3,8 @@ import express from "express";
 import initRabbit from "./initRabbit.js";
 import pg from "pg";
 import cors from "cors";
+import * as dotenv from "dotenv";
+dotenv.config();
 import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, PollCreated, RoomVisualized, MessageCreated } from "./events.js";
 
 const { eventBusChannel, confirmChannel } = await initRabbit("query", [
@@ -16,9 +18,13 @@ const { eventBusChannel, confirmChannel } = await initRabbit("query", [
   "MessageCreated",
 ]);
 
+if (!process.env.POSTGRES_PASSWORD) {
+  throw new Error("missing POSTGRES_PASSWORD environment variable");
+}
+
 const pgClient = new pg.Pool({
   user: "postgres",
-  password: "postgres",
+  password: process.env.POSTGRES_PASSWORD,
   host: "query-db",
   port: 5432,
 });
