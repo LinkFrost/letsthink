@@ -20,13 +20,7 @@ try {
   // create a document to insert
   const findResult = (await collection.find().toArray()) as SiteHealthData[];
 
-  let docs: SiteHealthData[] = [];
-
-  await findResult.forEach((doc) => {
-    docs.push(doc);
-  });
-
-  if (docs.length < 1) {
+  if (findResult.length < 1) {
     const doc = {
       totalRooms: 0,
       activeRooms: 0,
@@ -180,13 +174,7 @@ eventBusChannel.consume("site-health", async (message) => {
 const fetchSiteHealthData = async () => {
   const findResult = (await collection.find().toArray()) as SiteHealthData[];
 
-  let docs: SiteHealthData[] = [];
-
-  await findResult.forEach((doc) => {
-    docs.push(doc);
-  });
-
-  return docs[0];
+  return findResult[0];
 };
 
 app.get("/site-health", async (req, res) => {
