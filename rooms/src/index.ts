@@ -1,6 +1,3 @@
-import * as dotenv from "dotenv";
-dotenv.config();
-
 import initRabbit from "./utils/initRabbit.js";
 import initPostgres from "./utils/initPostgres.js";
 import initExpress from "./utils/initExpress.js";

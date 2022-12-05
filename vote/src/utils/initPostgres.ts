@@ -1,3 +1,5 @@
+import * as dotenv from "dotenv";
+dotenv.config();
 import pg from "pg";
 
 if (!process.env.POSTGRES_PASSWORD) {
