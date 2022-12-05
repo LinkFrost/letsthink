@@ -1,4 +1,3 @@
-import * as dotenv from "dotenv";
 import { EventKeys, RoomVisualized } from "./util/events.js";
 import initExpress from "./init/initExpress.js";
 import initEventBus from "./init/initRabbit.js";
@@ -11,7 +10,6 @@ const q = "email";
 const subscriptions: EventKeys[] = ["RoomVisualized"];
 
 // Initialize outside communications
-dotenv.config();
 const { eventBusChannel, confirmChannel } = await initEventBus(q, subscriptions);
 const { server } = await initExpress();
 const { sendEmail } = await sendInBlue();

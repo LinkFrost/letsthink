@@ -1,3 +1,6 @@
+import * as dotenv from "dotenv";
+dotenv.config();
+
 import { RoomVisualized } from "./events.js";
 import SendInBlue from "@sendinblue/client";
 
