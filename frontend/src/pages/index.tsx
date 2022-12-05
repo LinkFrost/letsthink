@@ -7,6 +7,7 @@ import useIsAuth from "../utils/hooks/useIsAuth";
 
 export default function Home() {
   // const { session, loading, error } = useIsAuth();
+  useSession();
 
   return (
     <div className="p-10">

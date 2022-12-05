@@ -1,12 +1,13 @@
 import { FormEvent, useEffect, useState, useRef } from "react";
 import Head from "next/head";
-import useSession from "../utils/hooks/useSession";
+import useSession, { signIn } from "../utils/hooks/useSession";
 import { useRouter } from "next/router";
 import Suspend from "../components/utils/Suspend";
 import { AuthService, RoomsService } from "../utils/services";
 
 export default function Login() {
   // const { session, loading, error, signIn } = useSession();
+  // const { signIn } = useSession();
   const [checkingForRedirect, setCheckingForRedirect] = useState(true);
   // const [email, setEmail] = useState<string>("");
   // const [password, setPassword] = useState<string>("");
@@ -19,31 +20,33 @@ export default function Login() {
 
   const handleSubmit = async (e: FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    await signIn(email.current.value, password.current.value);
 
-    console.log(email.current.value);
-    console.log(password.current.value);
+    // console.log(email.current.value);
+    // console.log(password.current.value);
 
-    const res = await fetch(`${AuthService}/login`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: email.current.value,
-        password: password.current.value,
-      }),
-    });
+    // const res = await fetch(`${AuthService}/login`, {
+    //   method: "POST",
+    //   credentials: "include",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({
+    //     email: email.current.value,
+    //     password: password.current.value,
+    //   }),
+    // });
 
-    setToken(res.headers.get("authorization"));
+    // setToken(res.headers.get("authorization"));
 
-    const data = await res.json();
-    console.log(data);
+    // const data = await res.json();
+    // console.log(data);
   };
 
   const handleRoomSubmit = async (e: FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
+    console.log("got here");
     const res = await fetch(`${RoomsService}/rooms`, {
       method: "POST",
       headers: {
@@ -61,6 +64,7 @@ export default function Login() {
         expired: false,
       }),
     });
+    console.log(res);
   };
 
   // useEffect(() => {
