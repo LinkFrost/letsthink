@@ -189,19 +189,20 @@ const fetchSiteHealthData = async () => {
   return docs[0];
 };
 
-app.post("/site-health", async (req, res) => {
-  // send event to rabbitMQ
-  const event: PollVoted = {
-    key: "PollVoted",
-    data: {
-      pollId: "string",
-      roomId: "string",
-      option: "string",
-    },
-  };
-  confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
-  await confirmChannel.waitForConfirms();
-  res.send(200);
+app.get("/site-health", async (req, res) => {
+  const siteHealthData: SiteHealthData = await fetchSiteHealthData();
+  res.send({
+    totalRooms: siteHealthData.totalRooms,
+    activeRooms: siteHealthData.activeRooms,
+    expiredRooms: siteHealthData.expiredRooms,
+    pollRooms: siteHealthData.pollRooms,
+    messageRooms: siteHealthData.messageRooms,
+    totalVotes: siteHealthData.totalVotes,
+    totalMessages: siteHealthData.totalMessages,
+    totalUsers: siteHealthData.totalUsers,
+    totalRequests: siteHealthData.totalRequests,
+    errors: siteHealthData.errors,
+  });
 });
 
 app.listen(4009, () => {
