@@ -31,7 +31,7 @@ app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
-    allowedHeaders: ["Authorization", "Content-Type", "Access-Control-Allow-Credentials"],
+    allowedHeaders: ["Authorization", "Content-Type", "Access-Control-Allow-Credentials", "Access-Control-Allow-Origin"],
     exposedHeaders: ["Authorization"],
   })
 );
@@ -60,6 +60,7 @@ app.get("/refresh", async (req, res) => {
 
     return res
       .set("Authorization", "Bearer " + accessToken)
+      .set("Access-Control-Allow-Origin", "http://localhost:3000")
       .status(200)
       .send({ success: "Generated new access token" });
   });

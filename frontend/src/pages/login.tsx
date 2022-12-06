@@ -6,13 +6,11 @@ import { AuthService, RoomsService } from "../utils/services";
 import { AuthContext } from "./_app";
 
 export default function Login() {
-  const auth = useContext(AuthContext);
+  const { token, isAuth } = useContext(AuthContext);
 
   const email = useRef() as React.MutableRefObject<HTMLInputElement>;
   const password = useRef() as React.MutableRefObject<HTMLInputElement>;
   const router = useRouter();
-
-  const [token, setToken] = useState<any>("");
 
   const handleSubmit = async (e: FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -32,31 +30,8 @@ export default function Login() {
     const data = await res.json();
 
     if (data.success) {
-      setToken(res.headers.get("authorization"));
+      router.replace("/");
     }
-  };
-
-  const handleRoomSubmit = async (e: FormEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-
-    const res = await fetch(`${RoomsService}/rooms`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Credentials": "true",
-        Authorization: token,
-      },
-      credentials: "include",
-      body: JSON.stringify({
-        user_id: "123456",
-        title: "HIIIIIII",
-        about: "This is my room",
-        duration: 15,
-        room_type: "poll",
-        expired: false,
-      }),
-    });
-    console.log(res);
   };
 
   return (
@@ -81,9 +56,6 @@ export default function Login() {
             Login
           </button>
         </form>
-        <button onClick={(e) => handleRoomSubmit(e)} className="mt-5 rounded-xl bg-white p-2 hover:bg-gray-300">
-          Create Room
-        </button>
       </div>
     </>
   );

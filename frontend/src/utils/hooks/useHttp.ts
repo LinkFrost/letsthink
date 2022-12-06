@@ -10,7 +10,9 @@ const useHttps = <T>(url: string) => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        credentials: "include",
+      });
       const data = await res.json();
 
       setData(data);

@@ -1,16 +1,14 @@
-import { useRouter } from "next/router";
 import { AuthService } from "../services";
-import type { Session } from "../types/types";
 import useHttp from "./useHttp";
 import { useEffect, useState } from "react";
 
 const useSession = () => {
-  const [token, setToken] = useState<string | null>("");
+  const [token, setToken] = useState<string>("");
   const [isAuth, setIsAuth] = useState<boolean>(false);
 
   useEffect(() => {
-    const getRefresh = async () => {
-      const res = await fetch(`${AuthService}/refresh`, {
+    const refreshToken = async () => {
+      const res = await fetch(`${AuthService}/refresh/`, {
         method: "GET",
         credentials: "include",
       });
@@ -18,17 +16,31 @@ const useSession = () => {
       const data = await res.json();
 
       if (data.success) {
-        setToken(res.headers.get("Authorization"));
-        setIsAuth(true);
+        const authToken = res.headers.get("Authorization");
+
+        if (authToken !== null) {
+          setIsAuth(true);
+          setToken(authToken);
+        }
+      } else {
+        setToken("");
+        setIsAuth(false);
       }
     };
 
-    getRefresh();
-  }, []);
+    refreshToken();
 
-  const sessionData = { token: token, isAuth: isAuth };
+    if (isAuth) {
+      setInterval(async () => {
+        await refreshToken();
+        console.log("Refreshed auth token");
+      }, 15000);
+    }
 
-  return { sessionData };
+    // return () => clearInterval(refresh);
+  }, [isAuth]);
+
+  return { token: token, isAuth: isAuth };
 };
 
 export default useSession;
