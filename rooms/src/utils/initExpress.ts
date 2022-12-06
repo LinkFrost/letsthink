@@ -19,7 +19,7 @@ const auth = () => {
 
     jwt.verify(token, process.env.JWT_ACCESS_SECRET, (err: any, user: any) => {
       if (err) {
-        return res.status(400).send({ error: err });
+        return res.status(400).send({ jwtError: err });
       }
 
       next();

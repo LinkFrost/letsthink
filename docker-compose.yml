@@ -44,6 +44,8 @@ services:
     container_name: letsthink-rooms-db
     image: postgres:alpine
     restart: always
+    ports:
+      - 5432:5432
     environment:
       - POSTGRES_PASSWORD=postgres
     volumes:

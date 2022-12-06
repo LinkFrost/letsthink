@@ -1,14 +1,25 @@
 import Link from "next/link";
 import { Inter } from "@next/font/google";
+import { AuthContext } from "../../pages/_app";
+import { useContext } from "react";
+
 const inter = Inter();
 
 const Header = () => {
+  const { token, isAuth } = useContext(AuthContext);
+
   return (
     <header className="flex justify-between bg-slate-100 p-10">
-      <h1 className="font-bold text-2xl">letsthink</h1>
-      <Link className="hover:underline text-lg" href="login">
-        Login
-      </Link>
+      <h1 className="text-2xl font-bold">letsthink</h1>
+      {!isAuth ? (
+        <Link className="text-lg hover:underline" href="login">
+          Login
+        </Link>
+      ) : (
+        <Link className="text-lg hover:underline" href="/">
+          Hi, auth!
+        </Link>
+      )}
     </header>
   );
 };

@@ -1,69 +1,46 @@
-import { useRouter } from "next/router";
 import { AuthService } from "../services";
-import type { Session } from "../types/types";
 import useHttp from "./useHttp";
 import { useEffect, useState } from "react";
 
-// const SHOULD_MOCK_AUTH = false;
-
-// const mockSession: Session = {
-//   user: {
-//     id: "clb4aw5a9000008mk9tsf4qcu",
-//     email: "test@test.com",
-//     username: "test user",
-//   },
-// };
-
 const useSession = () => {
-  const router = useRouter();
-  const [token, setToken] = useState<string | null>("");
-  const { data, loading, error } = useHttp<Session>(`${AuthService}/refresh`);
-  console.log(data);
+  const [token, setToken] = useState<string>("");
+  const [isAuth, setIsAuth] = useState<boolean>(false);
 
-  let sessionData;
-  sessionData = { token: data, loading, error };
+  useEffect(() => {
+    const refreshToken = async () => {
+      const res = await fetch(`${AuthService}/refresh/`, {
+        method: "GET",
+        credentials: "include",
+      });
 
-  // return { signIn, signOut };
-};
+      const data = await res.json();
 
-export const signIn = async (email: string, password: string) => {
-  const res = await fetch(`${AuthService}/login`, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email: email,
-      password: password,
-    }),
-  });
+      if (data.success) {
+        const authToken = res.headers.get("Authorization");
 
-  const data = await res.json();
+        if (authToken !== null) {
+          setIsAuth(true);
+          setToken(authToken);
+        }
+      } else {
+        setToken("");
+        setIsAuth(false);
+      }
+    };
 
-  if (data.success) {
-    console.log("success");
-    // router.replace("/");
-    // window.location.pathname = "/";
-    // setToken(res.headers.get("authorization"));
-  }
-};
+    refreshToken();
 
-export const signOut = async () => {
-  const res = await fetch(`${AuthService}/logout`, {
-    method: "DELETE",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+    if (isAuth) {
+      setInterval(async () => {
+        await refreshToken();
+        console.log("Refreshed auth token");
+      }, 15000);
+    }
 
-  const data = await res.json();
+    // return () => clearInterval(refresh);
+  }, [isAuth]);
 
-  if (data.success) {
-    // setToken(null);
-    window.location.pathname = "/login";
-  }
+  return { token: token, isAuth: isAuth };
 };
 
 export default useSession;
