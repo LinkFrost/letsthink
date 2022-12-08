@@ -19,7 +19,7 @@ const logout = async (router: NextRouter) => {
   const data = await res.json();
 
   if (data.success) {
-    router.replace("/");
+    router.reload();
   }
 };
 

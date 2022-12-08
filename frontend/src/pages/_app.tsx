@@ -7,14 +7,14 @@ import { User } from "../utils/types/types";
 import "../styles/globals.tailwind.css";
 
 // const auth = useSession();
-export const AuthContext = createContext({ token: "", isAuth: false, userData: {} });
+export const AuthContext = createContext({ token: "", isAuth: false, userData: {}, resetContext: () => {} });
+
+function AuthWrapper({ children }: { children: React.ReactNode }) {
+  const auth = useSession();
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
+}
 
 export default function App({ Component, pageProps }: AppProps) {
-  function AuthWrapper({ children }: { children: React.ReactNode }) {
-    const auth = useSession();
-    return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
-  }
-
   return (
     <AuthWrapper>
       <MainLayout>

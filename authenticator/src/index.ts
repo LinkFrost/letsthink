@@ -52,13 +52,13 @@ app.get("/auth/refresh", async (req, res) => {
 
   jwt.verify(refreshToken, REFRESH_SECRET, async (err: any, user: any) => {
     if (err) {
-      res.send({ error: err });
+      return res.send({ error: err });
     }
 
     const userDataResults = await pgClient.query("SELECT * FROM users where id=$1", [tokenUserData.id]).then((res) => res.rows);
 
     if (userDataResults.length !== 1) {
-      res.status(200).send({ error: `User with id ${tokenUserData.id} does not exist!` });
+      return res.status(200).send({ error: `User with id ${tokenUserData.id} does not exist!` });
     }
 
     const newTokenData = {
@@ -67,8 +67,10 @@ app.get("/auth/refresh", async (req, res) => {
       username: userDataResults[0].username,
     };
 
-    const accessToken = jwt.sign(newTokenData, SECRET, { expiresIn: "15s" });
-    const newRefreshToken = jwt.sign(newTokenData, REFRESH_SECRET);
+    const accessToken = jwt.sign(newTokenData, SECRET, { expiresIn: "30d" });
+    const newRefreshToken = jwt.sign(newTokenData, REFRESH_SECRET, { expiresIn: "60d" });
+
+    await redisClient.set(tokenUserData.id, newRefreshToken);
 
     return res
       .cookie("refreshToken", newRefreshToken, {
@@ -114,8 +116,8 @@ app.post("/auth/login", async (req, res) => {
       username: userData.username,
     };
 
-    const accessToken = jwt.sign(tokenUserData, SECRET, { expiresIn: "15s" });
-    const refreshToken = jwt.sign(tokenUserData, REFRESH_SECRET);
+    const accessToken = jwt.sign(tokenUserData, SECRET, { expiresIn: "30d" });
+    const refreshToken = jwt.sign(tokenUserData, REFRESH_SECRET, { expiresIn: "60d" });
 
     await redisClient.set(userData.id, refreshToken);
 

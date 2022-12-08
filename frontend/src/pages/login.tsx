@@ -28,7 +28,7 @@ export default function Login() {
     const data = await res.json();
 
     if (data.success) {
-      router.replace("/");
+      window.location.href = "/";
     }
   };
 

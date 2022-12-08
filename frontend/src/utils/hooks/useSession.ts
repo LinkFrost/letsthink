@@ -8,6 +8,12 @@ const useSession = () => {
   const [isAuth, setIsAuth] = useState<boolean>(false);
   const [user, setUser] = useState<User | {}>({});
 
+  const resetContext = () => {
+    setToken("");
+    setIsAuth(false);
+    setUser({});
+  };
+
   useEffect(() => {
     const refreshToken = async () => {
       const res = await fetch(`${AuthService}/auth/refresh/`, {
@@ -45,13 +51,15 @@ const useSession = () => {
     refreshToken();
 
     if (isAuth) {
-      setInterval(async () => {
+      const interval = setInterval(async () => {
         await refreshToken();
-      }, 15000);
+      }, 1296000000);
+
+      return () => clearInterval(interval);
     }
   }, [isAuth]);
 
-  return { token: token, isAuth: isAuth, userData: user };
+  return { token: token, isAuth: isAuth, userData: user, resetContext: resetContext };
 };
 
 export default useSession;
