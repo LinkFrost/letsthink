@@ -4,3 +4,4 @@ session-cache/
 .DS_Store
 .env
 .vscode
+dev.env

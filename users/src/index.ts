@@ -1,9 +1,9 @@
-import initExpress from "./init/initExpress.js";
-import { EventKeys, UserCreated } from "./util/events.js";
-import initEventBus from "./init/initRabbit.js";
-import { string, z } from "zod";
+import initExpress from "./utils/initExpress.js";
+import initPostgres from "./utils/initPostgres.js";
+import initEventBus from "./utils/initRabbit.js";
+import { EventKeys, UserCreated } from "./types/events.js";
+import { z } from "zod";
 import * as argon2 from "argon2";
-import initPostgres from "./init/initPostgres.js";
 
 // CONSTANTS
 const REQS_PW = { min: 1, max: 16 };
@@ -16,19 +16,19 @@ type UserFields = {
   password: string;
 };
 
-const q = "users";
+const queue = "users";
 const subscriptions: EventKeys[] = [];
 
 // Initialize outside communications
-const { eventBusChannel, confirmChannel } = await initEventBus(q, subscriptions);
-const { server } = await initExpress();
-const { postgres } = await initPostgres("users-db");
+const { eventBusChannel } = await initEventBus(queue, subscriptions);
+const app = initExpress(4006);
+const { pgClient } = await initPostgres("users-db");
 
 // Helper Functions
 const storeUser = async ({ username, email, password }: UserFields) => {
   const query = "INSERT INTO users(username, email, password) VALUES($1, $2, $3) RETURNING id, username, email";
   const queryValues = [username, email, password];
-  const result = await postgres.query(query, queryValues);
+  const result = await pgClient.query(query, queryValues);
 
   if (!result || !result.rows.length) {
     throw new Error("Could not store user");
@@ -38,7 +38,7 @@ const storeUser = async ({ username, email, password }: UserFields) => {
 };
 
 // REST Server
-server.post("/users", async (req, res) => {
+app.post("/users", async (req, res) => {
   try {
     z.object({
       email: z.string().email(),
@@ -54,7 +54,7 @@ server.post("/users", async (req, res) => {
 
     const event: UserCreated = { key: "UserCreated", data: user };
 
-    confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+    eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
     res.send(user);
   } catch (error) {
@@ -68,12 +68,8 @@ server.post("/users", async (req, res) => {
   }
 });
 
-server.get("/users", async (req, res) => {
-  const result = await postgres.query("SELECT * FROM users");
+app.get("/users", async (req, res) => {
+  const result = await pgClient.query("SELECT * FROM users");
 
   res.send(result.rows ?? "No users");
-});
-
-server.listen(4006, () => {
-  console.log("Users service listening on port 4006");
 });

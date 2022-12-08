@@ -1,23 +1,14 @@
-import express from "express";
-import pg from "pg";
-import cors from "cors";
+import initRabbit from "./utils/initRabbit.js";
+import initPostgres from "./utils/initPostgres.js";
+import initExpress from "./utils/initExpress.js";
 import z from "zod";
-import initRabbit from "./initRabbit.js";
-import type { MessageCreated, RoomData } from "./events.js";
+import type { MessageCreated } from "./types/events.js";
 
 const queue = "messages";
 
-const { eventBusChannel, confirmChannel } = await initRabbit(queue, ["RoomCreated", "RoomExpired"]);
-
-// Connect to service specific database
-const pgClient = new pg.Pool({
-  user: "postgres",
-  password: "postgres",
-  host: "messages-db",
-  port: 5432,
-});
-
-await pgClient.connect();
+const { eventBusChannel } = await initRabbit(queue, ["RoomCreated", "RoomExpired"]);
+const pgClient = await initPostgres("messages-db");
+const app = initExpress(4002);
 
 // Listen for incoming messages
 eventBusChannel.consume(queue, async (message) => {
@@ -26,45 +17,43 @@ eventBusChannel.consume(queue, async (message) => {
 
     console.log(`Received event of type ${key}`);
 
-    switch (key) {
-      case "RoomCreated": {
-        const { id, room_type } = data;
+    try {
+      switch (key) {
+        case "RoomCreated": {
+          const { id, room_type } = data;
 
-        if (room_type === "message") {
-          const queryText = "INSERT INTO rooms(id) VALUES($1) RETURNING *";
-          const queryValues = [id];
+          if (room_type === "message") {
+            const queryText = "INSERT INTO rooms(id) VALUES($1) RETURNING *";
+            const queryValues = [id];
+            pgClient.query(queryText, queryValues);
+          }
 
-          pgClient.query(queryText, queryValues);
+          break;
         }
 
-        break;
-      }
+        case "RoomExpired": {
+          const { room_id, room_type } = data;
 
-      case "RoomExpired": {
-        const { room_id, room_type } = data;
+          if (room_type === "message") {
+            const queryText = "DELETE FROM rooms WHERE id=$1";
+            const queryValues = [room_id];
+            pgClient.query(queryText, queryValues);
+          }
 
-        if (room_type === "message") {
-          const queryText = "DELETE FROM rooms WHERE id=$1";
-          const queryValues = [room_id];
-
-          pgClient.query(queryText, queryValues);
+          break;
         }
-
-        break;
       }
+    } catch (err) {
+      eventBusChannel.nack(message);
     }
 
     eventBusChannel.ack(message);
   }
 });
 
-const app = express();
-app.use(express.json());
-app.use(cors());
-
 app.post("/messages", async (req, res) => {
   const reqBody = z.object({
-    roomId: z.string(),
+    room_id: z.string(),
     content: z.string(),
   });
 
@@ -78,13 +67,7 @@ app.post("/messages", async (req, res) => {
     const roomQueryResults = await pgClient.query("SELECT * FROM rooms WHERE id=$1", [room_id]).then((res) => res.rows);
 
     if (roomQueryResults.length !== 1) {
-      return res.status(400).send({ error: `Room with id ${room_id} does not exist!` });
-    }
-
-    const roomData: RoomData = roomQueryResults[0];
-
-    if (roomData.expired) {
-      return res.status(400).send({ error: `Room with id ${room_id} is expired!` });
+      return res.status(400).send({ error: `Room with id ${room_id} does not exist or is expired!` });
     }
 
     const queryText = "INSERT INTO messages(roomId, content) VALUES($1, $2) RETURNING *";
@@ -94,14 +77,10 @@ app.post("/messages", async (req, res) => {
     const result = await pgClient.query(queryText, queryValues);
 
     const event: MessageCreated = { key: "MessageCreated", data: result.rows[0] };
-    confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+    eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
     res.send(`Sent event of type MessageCreated`);
   } catch (err) {
     res.status(500).send({ error: err });
   }
-});
-
-app.listen(4002, () => {
-  console.log("Listening on port 4002");
 });

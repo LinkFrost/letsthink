@@ -4,9 +4,11 @@ import initExpress from "./utils/initExpress.js";
 import z from "zod";
 import type { RoomCreated } from "./types/events.js";
 
+const queue = "rooms";
+
 // initialize rabbitmq, postgres, and express
-const eventBusChannel = await initRabbit("rooms", []);
-const postgres = await initPostgres("rooms-db");
+const eventBusChannel = await initRabbit(queue, []);
+const pgClient = await initPostgres("rooms-db");
 const app = initExpress(4001);
 
 app.post("/rooms", async (req, res) => {
@@ -28,7 +30,7 @@ app.post("/rooms", async (req, res) => {
     const queryValues = [user_id, title, about, duration, room_type];
 
     // run the query
-    const result = await postgres.query(query, queryValues);
+    const result = await pgClient.query(query, queryValues);
 
     // send event to rabbitMQ
     const event: RoomCreated = { key: "RoomCreated", data: result.rows[0] };
