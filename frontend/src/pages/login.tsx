@@ -6,8 +6,6 @@ import { AuthService, RoomsService } from "../utils/services";
 import { AuthContext } from "./_app";
 
 export default function Login() {
-  const { token, isAuth } = useContext(AuthContext);
-
   const email = useRef() as React.MutableRefObject<HTMLInputElement>;
   const password = useRef() as React.MutableRefObject<HTMLInputElement>;
   const router = useRouter();
@@ -15,7 +13,7 @@ export default function Login() {
   const handleSubmit = async (e: FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    const res = await fetch(`${AuthService}/login`, {
+    const res = await fetch(`${AuthService}/auth/login`, {
       method: "POST",
       credentials: "include",
       headers: {

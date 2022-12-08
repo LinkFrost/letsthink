@@ -5,7 +5,7 @@ import { AuthContext } from "./_app";
 import { RoomsService } from "../utils/services";
 
 export default function Home() {
-  const { token, isAuth } = useContext(AuthContext);
+  const { token, isAuth, userData } = useContext(AuthContext);
 
   const handleRoomSubmit = async (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
@@ -19,7 +19,7 @@ export default function Home() {
       },
       credentials: "include",
       body: JSON.stringify({
-        user_id: "123456",
+        user_id: (userData as any).id,
         title: "HIIIIIII",
         about: "This is my room",
         duration: 15,
@@ -38,7 +38,7 @@ export default function Home() {
       </Head>
       {isAuth && (
         <div>
-          <p className="text-3xl text-white">HI AUTH</p>
+          <p className="text-3xl text-white">Hi, {(userData as any).username}</p>
           <button onClick={(e) => handleRoomSubmit(e)} className="mt-5 rounded-xl bg-white p-2 hover:bg-gray-300">
             Create Room
           </button>
