@@ -6,11 +6,8 @@ import jwt from "jsonwebtoken";
 
 const auth = () => {
   return function verifyToken(req: any, res: any, next: any) {
-    console.log("HI");
     const header = req.headers["authorization"];
     const token = header && header.split(" ")[1];
-
-    console.log(req.headers);
 
     if (token == null) {
       return res.status(400).send({ error: "Invalid auth token!" });

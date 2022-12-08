@@ -6,7 +6,6 @@ import { AuthContext } from "../utils/auth/auth";
 
 export default function Home() {
   const session = useContext(AuthContext);
-  console.log("token", session.token);
 
   const handleRoomSubmit = async (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
