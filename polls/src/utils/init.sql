@@ -5,6 +5,6 @@ CREATE TABLE rooms (
 CREATE TABLE poll_options (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title text,
-  position: integer,
+  position integer,
   room_id UUID references rooms(id)
 );
