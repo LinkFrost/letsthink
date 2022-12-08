@@ -3,7 +3,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import Suspend from "../components/utils/Suspend";
 import { AuthService, RoomsService } from "../utils/services";
-import { AuthContext } from "./_app";
+import { SignIn } from "../utils/auth/auth";
 
 export default function Login() {
   const email = useRef() as React.MutableRefObject<HTMLInputElement>;
@@ -13,23 +13,7 @@ export default function Login() {
   const handleSubmit = async (e: FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    const res = await fetch(`${AuthService}/auth/login`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: email.current.value,
-        password: password.current.value,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      window.location.href = "/";
-    }
+    SignIn(email.current.value, password.current.value);
   };
 
   return (
