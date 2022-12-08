@@ -9,6 +9,11 @@ import Link from "next/link";
 type FormFields = "email" | "username" | "password" | "confirmPassword";
 type FormType = Record<FormFields, string>;
 type FormError = Record<FormFields, string> | undefined;
+type SubmissionStatus = {
+  color: "red" | "emerald" | "";
+  message: string;
+  status: "error" | "success" | "";
+};
 
 const customErrorMap: z.ZodErrorMap = (issue, ctx) => {
   if (issue.code === z.ZodIssueCode.too_small) {
@@ -69,55 +74,53 @@ export default function SignUp<NextPage>() {
 
   const [form, setForm] = useState<FormType>({ ...defaultForm });
   const [formErrors, setFormErrors] = useState({ ...defaultForm });
-  const [submissionStatus, setSubmissionStatus] = useState<{ color: "red" | "emerald"; message: string }>({ color: "red", message: "" });
+  const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>({ color: "", message: "", status: "" });
   const [signUpLoading, setSignUpLoading] = useState(false);
 
   const handleFormChange = (e: ChangeEvent<HTMLInputElement>, field: FormFields) => setForm({ ...form, [field]: e.target.value });
 
   const handleSubmit = async (e: FormEvent<HTMLButtonElement>) => {
-    const fire = async () => {
-      const errors = validateForm(form);
-      if (errors) {
-        return setFormErrors({ ...defaultForm, ...errors });
-      }
-
-      setFormErrors({ ...defaultForm });
-
-      // send request
-      setSignUpLoading(true);
-      const res = await fetch(`${UsersService}/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: form.email,
-          username: form.username,
-          password: form.password,
-        }),
-      });
-
-      setSignUpLoading(false);
-
-      if (!res.ok) {
-        if (res.status === 403) {
-          return setSubmissionStatus({ color: "red", message: "Username or email already taken" });
-        }
-      }
-
-      setSubmissionStatus({ color: "emerald", message: "Successfully signed up! Redirecting to login." });
-    };
-
-    const cleanUp = async () => {
-      setForm({ ...defaultForm });
-      setTimeout(() => {
-        router.replace("/login");
-      }, 2500);
-    };
-
     e.preventDefault();
-    await fire();
-    await cleanUp();
+
+    // Validate Login Form and Set Errors
+    const errors = validateForm(form);
+    if (errors) {
+      setFormErrors({ ...defaultForm, ...errors });
+      return;
+    }
+
+    setFormErrors({ ...defaultForm });
+
+    // send request
+    setSignUpLoading(true);
+    const res = await fetch(`${UsersService}/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: form.email,
+        username: form.username,
+        password: form.password,
+      }),
+    });
+
+    setSignUpLoading(false);
+
+    if (!res.ok) {
+      if (res.status === 403) {
+        setSubmissionStatus({ status: "error", color: "red", message: "Username or email already taken" });
+      }
+      return;
+    }
+
+    setSubmissionStatus({ status: "success", color: "emerald", message: "Successfully signed up! Redirecting to login." });
+
+    setForm({ ...defaultForm });
+
+    setTimeout(() => {
+      router.replace("/login");
+    }, 2500);
   };
 
   return (
@@ -134,25 +137,44 @@ export default function SignUp<NextPage>() {
           <label className="text-lg text-white" htmlFor="email">
             Email:
           </label>
-          <input onChange={(e) => handleFormChange(e, "email")} id="email" className="rounded-md px-2 py-[0.125rem] text-black" type="text"></input>
+          <input
+            value={form.email}
+            onChange={(e) => handleFormChange(e, "email")}
+            id="email"
+            className="rounded-md px-2 py-[0.125rem] text-black"
+            type="text"
+          ></input>
           <p className="text-xs text-red-400">{formErrors.email}</p>
           {/* USERNAME */}
           <label className="text-lg text-white" htmlFor="email">
             Username:
           </label>
-          <input onChange={(e) => handleFormChange(e, "username")} id="email" className="rounded-md px-2 py-[0.125rem] text-black" type="text"></input>
+          <input
+            value={form.username}
+            onChange={(e) => handleFormChange(e, "username")}
+            id="email"
+            className="rounded-md px-2 py-[0.125rem] text-black"
+            type="text"
+          ></input>
           <p className="text-xs text-red-400">{formErrors.username}</p>
           {/* PASSWORD */}
           <label className="text-lg text-white" htmlFor="email">
             Password:
           </label>
-          <input onChange={(e) => handleFormChange(e, "password")} id="password" className="rounded-md px-2 py-[0.125rem] text-black" type="text"></input>
+          <input
+            value={form.password}
+            onChange={(e) => handleFormChange(e, "password")}
+            id="password"
+            className="rounded-md px-2 py-[0.125rem] text-black"
+            type="text"
+          ></input>
           <p className="text-xs text-red-400">{formErrors.password}</p>
           {/* CONFIRM PASSWORD */}
           <label className="text-lg text-white" htmlFor="email">
             Confirm Password:
           </label>
           <input
+            value={form.confirmPassword}
             onChange={(e) => handleFormChange(e, "confirmPassword")}
             id="password"
             className="rounded-md px-2 py-[0.125rem] text-black"
