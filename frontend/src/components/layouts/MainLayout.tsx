@@ -12,7 +12,9 @@ const Header = (props: { router: NextRouter }) => {
 
   return (
     <header className="flex justify-between bg-slate-100 p-10">
-      <h1 className="text-2xl font-bold">letsthink</h1>
+      <Link href="/">
+        <h1 className="text-2xl font-bold">letsthink</h1>
+      </Link>
       {!session.isAuth ? (
         <Link className="text-lg hover:underline" href="login">
           Login

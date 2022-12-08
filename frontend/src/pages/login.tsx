@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import Suspend from "../components/utils/Suspend";
 import { AuthService, RoomsService } from "../utils/services";
 import { login } from "../utils/auth/auth";
+import Link from "next/link";
 
 export default function Login() {
   const email = useRef() as React.MutableRefObject<HTMLInputElement>;
@@ -37,6 +38,12 @@ export default function Login() {
           <button onClick={(e) => handleSubmit(e)} className="mt-5 rounded-xl bg-white p-2 hover:bg-gray-300">
             Login
           </button>
+          <p className="py-2 text-sm text-gray-300">
+            {"Don't have an account? "}
+            <Link href="/signup" className="font-semibold hover:underline">
+              Sign Up Here
+            </Link>
+          </p>
         </form>
       </div>
     </>
