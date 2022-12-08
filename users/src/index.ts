@@ -61,6 +61,9 @@ server.post("/users", async (req, res) => {
     if (error instanceof Error) {
       if ((error as Error & { code: string | undefined }).code === "23505") {
         res.status(403).send("A user with that username or email already exists");
+      } else {
+        console.log(error.message);
+        res.status(500).send("Internal Server Error");
       }
     } else {
       res.status(400).send("Bad Request");
