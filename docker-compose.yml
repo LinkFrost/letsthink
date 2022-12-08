@@ -70,6 +70,8 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+      messages-db:
+        condition: service_healthy
     environment:
       - MESSAGES_PG_PASSWORD=${MESSAGES_PG_PASSWORD}
 
@@ -82,7 +84,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=${MESSAGES_PG_PASSWORD}
     volumes:
-      - "./messages/src/utils/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+      - "./messages/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
       interval: 10s
@@ -99,6 +101,8 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+      polls-db:
+        condition: service_healthy
     environment:
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
       - ORIGIN=${ORIGIN}
@@ -113,7 +117,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=${POLLS_PG_PASSWORD}
     volumes:
-      - "./polls/src/utils/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+      - "./polls/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
       interval: 10s
@@ -167,6 +171,8 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+      users-db:
+        condition: service_healthy
     environment:
       - USERS_PG_PASSWORD=${USERS_PG_PASSWORD}
 
@@ -179,7 +185,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=${USERS_PG_PASSWORD}
     volumes:
-      - "./users/src/utils/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+      - "./users/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
       interval: 10s
@@ -264,6 +270,8 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+      query-db:
+        condition: service_healthy
     environment:
       - QUERY_PG_PASSWORD=${QUERY_PG_PASSWORD}
 
@@ -276,7 +284,7 @@ services:
     environment:
       - POSTGRES_PASSWORD=${QUERY_PG_PASSWORD}
     volumes:
-      - "./query/src/utils/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+      - "./query/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
       interval: 10s
@@ -292,6 +300,8 @@ services:
       - "./vote/src:/usr/app/src"
     depends_on:
       event-bus:
+        condition: service_healthy
+      vote-db:
         condition: service_healthy
     environment:
       - VOTE_PG_PASSWORD=${VOTE_PG_PASSWORD}
