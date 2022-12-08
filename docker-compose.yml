@@ -54,7 +54,7 @@ services:
       - "./rooms/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
-      interval: 10s
+      interval: 25s
       timeout: 30s
       retries: 10
 
@@ -85,7 +85,7 @@ services:
       - "./messages/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
-      interval: 10s
+      interval: 25s
       timeout: 30s
       retries: 10
 
@@ -118,7 +118,7 @@ services:
       - "./polls/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
-      interval: 10s
+      interval: 25s
       timeout: 30s
       retries: 10
 
@@ -186,7 +186,7 @@ services:
       - "./users/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
-      interval: 10s
+      interval: 25s
       timeout: 30s
       retries: 10
 
@@ -285,7 +285,7 @@ services:
       - "./query/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
-      interval: 10s
+      interval: 25s
       timeout: 30s
       retries: 10
 
@@ -314,6 +314,6 @@ services:
       - "./vote/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
-      interval: 10s
+      interval: 25s
       timeout: 30s
       retries: 10
