@@ -1,38 +1,16 @@
-import amqplib from "amqplib";
-import initRabbit from "./initRabbit.js";
-import express from "express";
-import cors from "cors";
-import * as dotenv from "dotenv";
-dotenv.config();
-import { MongoClient, WithId, ObjectId } from "mongodb";
+import initRabbit from "./utils/initRabbit.js";
+import initExpress from "./utils/initExpress.js";
+import initMongo from "./utils/initMongo.js";
+import { WithId, ObjectId } from "mongodb";
 
-import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, UserCreated, HTTPRequest } from "./events.js";
+import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, UserCreated, HTTPRequest } from "./types/events.js";
 
-const app = express();
-app.use(express.json());
-app.use(cors());
-
-if (!process.env.MONGO_URI) {
-  throw new Error("missing MONGO_URI environment variable");
-}
-
-if (!process.env.MONGO_DB_NAME) {
-  throw new Error("missing MONGO_DB_NAME environment variable");
-}
-
-if (!process.env.MONGO_COLLECTION_NAME) {
-  throw new Error("missing MONGO_COLLECTION_NAME environment variable");
-}
-
-const uri = process.env.MONGO_URI;
-const client = new MongoClient(uri);
-const database = client.db(process.env.MONGO_DB_NAME);
-const collection = database.collection(process.env.MONGO_COLLECTION_NAME);
+const { mongoCollection } = await initMongo();
 
 // Initializing db
 try {
   // create a document to insert
-  const findResult = (await collection.find().toArray()) as SiteHealthData[];
+  const findResult = (await mongoCollection.find().toArray()) as SiteHealthData[];
 
   if (findResult.length < 1) {
     const doc = {
@@ -48,7 +26,7 @@ try {
       errors: 0,
     };
 
-    await collection.insertOne(doc);
+    await mongoCollection.insertOne(doc);
   }
 } catch (e) {
   console.log(e);
@@ -63,6 +41,8 @@ const { eventBusChannel, confirmChannel } = await initRabbit("site-health", [
   "HTTPRequest",
   "UserCreated",
 ]);
+
+const app = initExpress(4009);
 
 interface SiteHealthData extends WithId<Document> {
   _id: ObjectId;
@@ -94,11 +74,11 @@ eventBusChannel.consume("site-health", async (message) => {
           },
         };
 
-        const result = await collection.updateOne({}, updateDoc);
+        const result = await mongoCollection.updateOne({}, updateDoc);
         break;
       }
       case "RoomCreated": {
-        if (data.roomType === "message") {
+        if (data.room_type === "message") {
           const updateDoc = {
             $set: {
               totalRooms: siteHealthData.totalRooms + 1,
@@ -106,7 +86,7 @@ eventBusChannel.consume("site-health", async (message) => {
               messageRooms: siteHealthData.messageRooms + 1,
             },
           };
-          const result = await collection.updateOne({}, updateDoc);
+          const result = await mongoCollection.updateOne({}, updateDoc);
         } else {
           const updateDoc = {
             $set: {
@@ -115,7 +95,7 @@ eventBusChannel.consume("site-health", async (message) => {
               pollRooms: siteHealthData.pollRooms + 1,
             },
           };
-          const result = await collection.updateOne({}, updateDoc);
+          const result = await mongoCollection.updateOne({}, updateDoc);
         }
         break;
       }
@@ -127,7 +107,7 @@ eventBusChannel.consume("site-health", async (message) => {
             },
           };
 
-          const result = await collection.updateOne({}, updateDoc);
+          const result = await mongoCollection.updateOne({}, updateDoc);
         }
         break;
       }
@@ -138,7 +118,7 @@ eventBusChannel.consume("site-health", async (message) => {
           },
         };
 
-        const result = await collection.updateOne({}, updateDoc);
+        const result = await mongoCollection.updateOne({}, updateDoc);
         break;
       }
       case "PollVoted": {
@@ -148,7 +128,7 @@ eventBusChannel.consume("site-health", async (message) => {
           },
         };
 
-        const result = await collection.updateOne({}, updateDoc);
+        const result = await mongoCollection.updateOne({}, updateDoc);
         break;
       }
       case "MessageVoted": {
@@ -158,7 +138,7 @@ eventBusChannel.consume("site-health", async (message) => {
           },
         };
 
-        const result = await collection.updateOne({}, updateDoc);
+        const result = await mongoCollection.updateOne({}, updateDoc);
         break;
       }
       case "HTTPRequest": {
@@ -175,7 +155,7 @@ eventBusChannel.consume("site-health", async (message) => {
           },
         };
 
-        const result = await collection.updateOne({}, updateDoc);
+        const result = await mongoCollection.updateOne({}, updateDoc);
         break;
       }
     }
@@ -186,7 +166,7 @@ eventBusChannel.consume("site-health", async (message) => {
 });
 
 const fetchSiteHealthData = async () => {
-  const findResult = (await collection.find().toArray()) as SiteHealthData[];
+  const findResult = (await mongoCollection.find().toArray()) as SiteHealthData[];
 
   return findResult[0];
 };
@@ -205,8 +185,4 @@ app.get("/site-health", async (req, res) => {
     totalRequests: siteHealthData.totalRequests,
     errors: siteHealthData.errors,
   });
-});
-
-app.listen(4009, () => {
-  console.log("site health service listening on port 4009");
 });

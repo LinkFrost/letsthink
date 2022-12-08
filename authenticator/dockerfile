@@ -6,4 +6,6 @@ COPY ./package.json ./
 RUN npm install
 COPY ./ ./
 
+# ENV npm_config_build_from_source true
+
 CMD ["npm", "run", "dev"]

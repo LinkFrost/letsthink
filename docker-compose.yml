@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   event-bus:
     container_name: letsthink-event-bus
@@ -39,6 +37,10 @@ services:
         condition: service_healthy
       rooms-db:
         condition: service_healthy
+    environment:
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - ORIGIN=${ORIGIN}
+      - ROOMS_PG_PASSWORD=${ROOMS_PG_PASSWORD}
 
   rooms-db:
     container_name: letsthink-rooms-db
@@ -47,9 +49,9 @@ services:
     ports:
       - 5432:5432
     environment:
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=${ROOMS_PG_PASSWORD}
     volumes:
-      - "./rooms/src/init.sql:/docker-entrypoint-initdb.d/init.sql"
+      - "./rooms/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
       interval: 10s
@@ -66,6 +68,10 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+      messages-db:
+        condition: service_healthy
+    environment:
+      - MESSAGES_PG_PASSWORD=${MESSAGES_PG_PASSWORD}
 
   messages-db:
     container_name: letsthink-messages-db
@@ -74,9 +80,14 @@ services:
     ports:
       - 5433:5432
     environment:
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=${MESSAGES_PG_PASSWORD}
     volumes:
-      - "./messages/src/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+      - "./messages/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
+    healthcheck:
+      test: pg_isready --username=postgres
+      interval: 10s
+      timeout: 30s
+      retries: 10
 
   polls:
     container_name: letsthink-polls
@@ -88,6 +99,12 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+      polls-db:
+        condition: service_healthy
+    environment:
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - ORIGIN=${ORIGIN}
+      - POLLS_PG_PASSWORD=${POLLS_PG_PASSWORD}
 
   polls-db:
     container_name: letsthink-polls-db
@@ -96,9 +113,14 @@ services:
     ports:
       - 5434:5432
     environment:
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=${POLLS_PG_PASSWORD}
     volumes:
-      - "./polls/src/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+      - "./polls/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
+    healthcheck:
+      test: pg_isready --username=postgres
+      interval: 10s
+      timeout: 30s
+      retries: 10
 
   moderator:
     container_name: letsthink-moderator
@@ -121,8 +143,14 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+    environment:
+      - EMAIL_MONGO_USER=${EMAIL_MONGO_USER}
+      - EMAIL_MONGO_PASSWORD=${EMAIL_MONGO_PASSWORD}
+      - SIB_API_KEY=${SIB_API_KEY}
+      - SIB_SENDER_EMAIL=${SIB_SENDER_EMAIL}
+      - SIB_SENDER_NAME=${SIB_SENDER_NAME}
 
-  site-email:
+  email-db:
     container_name: letsthink-email-db
     image: mongo:latest
     environment:
@@ -141,6 +169,10 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+      users-db:
+        condition: service_healthy
+    environment:
+      - USERS_PG_PASSWORD=${USERS_PG_PASSWORD}
 
   users-db:
     container_name: letsthink-users-db
@@ -149,9 +181,14 @@ services:
     ports:
       - 5437:5432
     environment:
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=${USERS_PG_PASSWORD}
     volumes:
-      - "./users/src/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+      - "./users/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
+    healthcheck:
+      test: pg_isready --username=postgres
+      interval: 10s
+      timeout: 30s
+      retries: 10
 
   authenticator:
     container_name: letsthink-authenticator
@@ -163,6 +200,11 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+    environment:
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - ORIGIN=${ORIGIN}
+      - USERS_PG_PASSWORD=${USERS_PG_PASSWORD}
 
   authenticator-cache:
     container_name: letsthink-authenticator-cache
@@ -192,6 +234,9 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+    environment:
+      - SH_MONGO_USER=${SH_MONGO_USER}
+      - SH_MONGO_PASSWORD=${SH_MONGO_PASSWORD}
 
   site-health-db:
     container_name: letsthink-site-health-db
@@ -223,6 +268,10 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+      query-db:
+        condition: service_healthy
+    environment:
+      - QUERY_PG_PASSWORD=${QUERY_PG_PASSWORD}
 
   query-db:
     container_name: letsthink-query-db
@@ -231,9 +280,14 @@ services:
     ports:
       - 5444:5432
     environment:
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=${QUERY_PG_PASSWORD}
     volumes:
-      - "./query/src/init.sql:/docker-entrypoint-initdb.d/create_tables.sql"
+      - "./query/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
+    healthcheck:
+      test: pg_isready --username=postgres
+      interval: 10s
+      timeout: 30s
+      retries: 10
 
   vote:
     container_name: letsthink-vote
@@ -245,15 +299,19 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+      vote-db:
+        condition: service_healthy
+    environment:
+      - VOTE_PG_PASSWORD=${VOTE_PG_PASSWORD}
 
   vote-db:
     container_name: letsthink-vote-db
     image: postgres:alpine
     restart: always
     environment:
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=${VOTE_PG_PASSWORD}
     volumes:
-      - "./vote/src/init.sql:/docker-entrypoint-initdb.d/init.sql"
+      - "./vote/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:
       test: pg_isready --username=postgres
       interval: 10s

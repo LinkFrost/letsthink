@@ -17,6 +17,7 @@ export default function Home() {
         "Access-Control-Allow-Credentials": "true",
         Authorization: session.token,
       },
+      mode: "cors",
       credentials: "include",
       body: JSON.stringify({
         user_id: (session.userData as any).id,

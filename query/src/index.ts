@@ -1,13 +1,11 @@
-import amqplib from "amqplib";
-import express from "express";
-import initRabbit from "./initRabbit.js";
-import pg from "pg";
-import cors from "cors";
-import * as dotenv from "dotenv";
-dotenv.config();
-import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, PollCreated, RoomVisualized, MessageCreated } from "./events.js";
+import initRabbit from "./utils/initRabbit.js";
+import initPostgres from "./utils/initPostgres.js";
+import initExpress from "./utils/initExpress.js";
+import { auth } from "./utils/initExpress.js";
 
-const { eventBusChannel, confirmChannel } = await initRabbit("query", [
+import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, PollCreated, RoomVisualized, MessageCreated } from "./types/events.js";
+
+const { eventBusChannel } = await initRabbit("query", [
   "RoomCreated",
   "RoomExpired",
   "RoomVisualized",
@@ -17,30 +15,17 @@ const { eventBusChannel, confirmChannel } = await initRabbit("query", [
   "PollCreated",
   "MessageCreated",
 ]);
-
-if (!process.env.POSTGRES_PASSWORD) {
-  throw new Error("missing POSTGRES_PASSWORD environment variable");
-}
-
-const pgClient = new pg.Pool({
-  user: "postgres",
-  password: process.env.POSTGRES_PASSWORD,
-  host: "query-db",
-  port: 5432,
-});
-
-await pgClient.connect();
-
-const app = express();
-app.use(express.json());
-app.use(cors());
+const pgClient = await initPostgres("query-db");
+const app = initExpress(4011);
 
 type Event = RoomCreated | PollCreated | PollVoted | MessageVoted | MessageModerated | RoomVisualized | RoomExpired | MessageCreated;
 
 // Listen for incoming messages
-eventBusChannel?.consume("query", (message: amqplib.ConsumeMessage | null) => {
+eventBusChannel?.consume("query", (message) => {
   if (message !== null) {
     const { key, data }: Event = JSON.parse(message.content.toString());
+
+    console.log(`Received event of type ${key}`);
 
     switch (key) {
       default:
@@ -72,8 +57,4 @@ eventBusChannel?.consume("query", (message: amqplib.ConsumeMessage | null) => {
 
     eventBusChannel.ack(message);
   }
-});
-
-app.listen(4011, () => {
-  console.log("query service listening on port 4011");
 });
