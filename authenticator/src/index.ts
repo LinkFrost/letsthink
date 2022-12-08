@@ -37,28 +37,46 @@ app.use(
 );
 app.use(cookieParser());
 
-app.get("/refresh", async (req, res) => {
+app.get("/auth/refresh", async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
-  if (!refreshToken || !(await redisClient.get(refreshToken))) {
-    return res.status(400).send({ error: "Refresh token doesn't exist" });
+  if (!refreshToken) {
+    return res.status(200).send({ error: "Refresh token not attached as cookie!" });
   }
 
-  jwt.verify(refreshToken, REFRESH_SECRET, (err: any, user: any) => {
+  const tokenUserData = JSON.parse(Buffer.from(refreshToken.split(".")[1], "base64").toString());
+
+  if (!(await redisClient.get(tokenUserData.id))) {
+    return res.status(200).send({ error: "Refresh token does not exist in cache" });
+  }
+
+  jwt.verify(refreshToken, REFRESH_SECRET, async (err: any, user: any) => {
     if (err) {
       res.send({ error: err });
     }
 
-    const userData = {
-      id: user.id,
-      email: user.email,
-      password: user.password,
-      username: user.username,
+    const userDataResults = await pgClient.query("SELECT * FROM users where id=$1", [tokenUserData.id]).then((res) => res.rows);
+
+    if (userDataResults.length !== 1) {
+      res.status(200).send({ error: `User with id ${tokenUserData.id} does not exist!` });
+    }
+
+    const newTokenData = {
+      id: userDataResults[0].id,
+      email: userDataResults[0].email,
+      username: userDataResults[0].username,
     };
 
-    const accessToken = jwt.sign(userData, SECRET, { expiresIn: "15s" });
+    const accessToken = jwt.sign(newTokenData, SECRET, { expiresIn: "15s" });
+    const newRefreshToken = jwt.sign(newTokenData, REFRESH_SECRET);
 
     return res
+      .cookie("refreshToken", newRefreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: true,
+        path: "/auth",
+      })
       .set("Authorization", "Bearer " + accessToken)
       .set("Access-Control-Allow-Origin", "http://localhost:3000")
       .status(200)
@@ -66,7 +84,7 @@ app.get("/refresh", async (req, res) => {
   });
 });
 
-app.post("/login", async (req, res) => {
+app.post("/auth/login", async (req, res) => {
   const reqBody = z.object({
     email: z.string(),
     password: z.string(),
@@ -90,10 +108,16 @@ app.post("/login", async (req, res) => {
       return res.status(400).send({ error: "Incorrect password!" });
     }
 
-    const accessToken = jwt.sign(userData, SECRET, { expiresIn: "15s" });
-    const refreshToken = jwt.sign(userData, REFRESH_SECRET);
+    const tokenUserData = {
+      id: userData.id,
+      email: userData.email,
+      username: userData.username,
+    };
 
-    await redisClient.set(refreshToken, userData.id);
+    const accessToken = jwt.sign(tokenUserData, SECRET, { expiresIn: "15s" });
+    const refreshToken = jwt.sign(tokenUserData, REFRESH_SECRET);
+
+    await redisClient.set(userData.id, refreshToken);
 
     return res
       .header("Access-Control-Expose-Headers", "Authorization")
@@ -104,6 +128,7 @@ app.post("/login", async (req, res) => {
         httpOnly: true,
         secure: true,
         sameSite: true,
+        path: "/auth",
       })
       .send({ success: "Successfully authorized" });
   } catch (err) {
@@ -111,18 +136,22 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.delete("/logout", async (req, res) => {
+app.delete("/auth/logout", async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
-  if (!refreshToken || !(await redisClient.get(refreshToken))) {
-    return res.status(400).send({ success: "Refresh token does not exist!" });
+  if (!refreshToken) {
+    return res.status(400).send({ success: "Refresh token not attached as cookie!" });
   }
 
-  await redisClient.del(refreshToken);
+  const tokenUserData = JSON.parse(Buffer.from(refreshToken.split(".")[1], "base64").toString());
 
-  req.cookies.destroy;
+  if (!(await redisClient.get(tokenUserData.id))) {
+    return res.status(400).send({ error: "Refresh token does not exist in cache" });
+  }
 
-  return res.clearCookie("refreshToken").status(200).send({ success: "Successfully signed out" });
+  await redisClient.del(tokenUserData.id);
+
+  return res.clearCookie("refreshToken", { path: "/auth" }).status(200).send({ success: "Successfully signed out" });
 });
 
 app.listen(4007, () => {

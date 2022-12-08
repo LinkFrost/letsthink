@@ -2,11 +2,12 @@ import type { AppProps } from "next/app";
 import MainLayout from "../components/layouts/MainLayout";
 import React, { createContext, useContext } from "react";
 import useSession from "../utils/hooks/useSession";
+import { User } from "../utils/types/types";
 
 import "../styles/globals.tailwind.css";
 
 // const auth = useSession();
-export const AuthContext = createContext({ token: "", isAuth: false });
+export const AuthContext = createContext({ token: "", isAuth: false, userData: {} });
 
 export default function App({ Component, pageProps }: AppProps) {
   function AuthWrapper({ children }: { children: React.ReactNode }) {

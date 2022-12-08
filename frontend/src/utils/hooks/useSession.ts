@@ -1,14 +1,16 @@
 import { AuthService } from "../services";
-import useHttp from "./useHttp";
 import { useEffect, useState } from "react";
+import { User } from "../types/types";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 const useSession = () => {
   const [token, setToken] = useState<string>("");
   const [isAuth, setIsAuth] = useState<boolean>(false);
+  const [user, setUser] = useState<User | {}>({});
 
   useEffect(() => {
     const refreshToken = async () => {
-      const res = await fetch(`${AuthService}/refresh/`, {
+      const res = await fetch(`${AuthService}/auth/refresh/`, {
         method: "GET",
         credentials: "include",
       });
@@ -19,12 +21,24 @@ const useSession = () => {
         const authToken = res.headers.get("Authorization");
 
         if (authToken !== null) {
-          setIsAuth(true);
-          setToken(authToken);
+          const tokenUserData = jwt.decode(authToken.split(" ")[1], { complete: true })?.payload as JwtPayload;
+
+          if (tokenUserData) {
+            const userData = {
+              id: tokenUserData.id,
+              email: tokenUserData.email,
+              username: tokenUserData.username,
+            };
+
+            setUser(userData);
+            setIsAuth(true);
+            setToken(authToken);
+          }
         }
       } else {
         setToken("");
         setIsAuth(false);
+        setUser({});
       }
     };
 
@@ -33,14 +47,11 @@ const useSession = () => {
     if (isAuth) {
       setInterval(async () => {
         await refreshToken();
-        console.log("Refreshed auth token");
       }, 15000);
     }
-
-    // return () => clearInterval(refresh);
   }, [isAuth]);
 
-  return { token: token, isAuth: isAuth };
+  return { token: token, isAuth: isAuth, userData: user };
 };
 
 export default useSession;

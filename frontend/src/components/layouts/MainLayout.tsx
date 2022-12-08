@@ -2,11 +2,29 @@ import Link from "next/link";
 import { Inter } from "@next/font/google";
 import { AuthContext } from "../../pages/_app";
 import { useContext } from "react";
+import { NextRouter, useRouter } from "next/router";
+import { AuthService } from "../../utils/services";
 
 const inter = Inter();
 
-const Header = () => {
-  const { token, isAuth } = useContext(AuthContext);
+const logout = async (router: NextRouter) => {
+  const res = await fetch(`${AuthService}/auth/logout`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    router.replace("/");
+  }
+};
+
+const Header = (props: { router: NextRouter }) => {
+  const { token, isAuth, userData } = useContext(AuthContext);
 
   return (
     <header className="flex justify-between bg-slate-100 p-10">
@@ -16,9 +34,14 @@ const Header = () => {
           Login
         </Link>
       ) : (
-        <Link className="text-lg hover:underline" href="/">
-          Hi, auth!
-        </Link>
+        <div className="flex gap-6">
+          <Link className="text-lg hover:underline" href="/">
+            Hi, {(userData as any).username}
+          </Link>
+          <Link className="text-lg hover:underline" href="">
+            <button onClick={() => logout(props.router)}>Logout</button>
+          </Link>
+        </div>
       )}
     </header>
   );
@@ -107,9 +130,11 @@ const Footer = () => {
 };
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter();
+
   return (
     <div className={`flex min-h-screen flex-col justify-start bg-neutral-900 ${inter.className}`}>
-      <Header />
+      <Header router={router} />
       {children}
       <Footer />
     </div>

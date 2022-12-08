@@ -121,7 +121,7 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
-  
+
   site-email:
     container_name: letsthink-email-db
     image: mongo:latest
@@ -170,8 +170,6 @@ services:
     restart: always
     ports:
       - 6397:6397
-    volumes:
-      - ./authenticator/session-cache:/data
 
   expiration:
     container_name: letsthink-expiration
