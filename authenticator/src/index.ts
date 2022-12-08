@@ -1,41 +1,25 @@
-import express from "express";
-import pg from "pg";
-import cors from "cors";
-import cookieParser from "cookie-parser";
+import * as dotenv from "dotenv";
+dotenv.config();
+import initExpress from "./utils/initExpress.js";
+import initPostgres from "./utils/initPostgres.js";
 import z from "zod";
 import redis from "redis";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
-import type { UserData } from "./events.js";
+import type { UserData } from "./types/events.js";
 
-const SECRET = "sYxxNMQuG7UJHGLXPrMQ4vliNdTapB2zdHP39jqMpjI";
-const REFRESH_SECRET = "397d1fe1c55e51879eb75713d18d9133";
+const SECRET = process.env.JWT_ACCESS_SECRET as string;
+const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as string;
 
-// Connect to service specific database
-const pgClient = new pg.Pool({
-  user: "postgres",
-  password: "postgres",
-  host: "users-db",
-  port: 5432,
-});
+if (!SECRET || !REFRESH_SECRET) {
+  throw new Error("One or more JWT environment variables missing!");
+}
+
+const app = initExpress(4007);
+const { pgClient } = await initPostgres("users-db");
 
 const redisClient = redis.createClient({ url: "redis://authenticator-cache" });
-
-await pgClient.connect();
 await redisClient.connect();
-
-const app = express();
-
-app.use(express.json());
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-    allowedHeaders: ["Authorization", "Content-Type", "Access-Control-Allow-Credentials", "Access-Control-Allow-Origin"],
-    exposedHeaders: ["Authorization"],
-  })
-);
-app.use(cookieParser());
 
 app.get("/auth/refresh", async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
@@ -154,8 +138,4 @@ app.delete("/auth/logout", async (req, res) => {
   await redisClient.del(tokenUserData.id);
 
   return res.clearCookie("refreshToken", { path: "/auth" }).status(200).send({ success: "Successfully signed out" });
-});
-
-app.listen(4007, () => {
-  console.log("Listening on port 4007");
 });
