@@ -1,13 +1,13 @@
 CREATE TABLE rooms {
   id UUID PRIMARY KEY
-}
+};
 
 CREATE TABLE messages {
   id UUID PRIMARY KEY,
   votes INTEGER DEFAULT 0
-}
+};
 
 CREATE TABLE poll_options {
   id UUID PRIMARY KEY,
   votes INTEGER DEFAULT 0
-}
+};

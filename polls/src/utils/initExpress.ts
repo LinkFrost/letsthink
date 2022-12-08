@@ -36,7 +36,7 @@ export default (port: number) => {
     cors({
       origin: process.env.ORIGIN,
       credentials: true,
-      allowedHeaders: ["Authorization", "Content-Type", "Access-Control-Allow-Credentials"],
+      allowedHeaders: ["Authorization", "Content-Type", "Access-Control-Allow-Credentials", "Access-Control-Allow-Origin"],
       exposedHeaders: ["Authorization"],
     })
   );

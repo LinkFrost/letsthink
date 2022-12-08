@@ -6,6 +6,7 @@ import { AuthContext } from "../utils/auth/auth";
 
 export default function Home() {
   const session = useContext(AuthContext);
+  console.log("token", session.token);
 
   const handleRoomSubmit = async (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
@@ -17,6 +18,7 @@ export default function Home() {
         "Access-Control-Allow-Credentials": "true",
         Authorization: session.token,
       },
+      mode: "cors",
       credentials: "include",
       body: JSON.stringify({
         user_id: (session.userData as any).id,

@@ -6,8 +6,11 @@ import jwt from "jsonwebtoken";
 
 const auth = () => {
   return function verifyToken(req: any, res: any, next: any) {
+    console.log("HI");
     const header = req.headers["authorization"];
     const token = header && header.split(" ")[1];
+
+    console.log(req.headers);
 
     if (token == null) {
       return res.status(400).send({ error: "Invalid auth token!" });
@@ -31,15 +34,15 @@ export default (port: number) => {
   const app = express();
 
   app.use(express.json());
-  app.use(auth());
   app.use(
     cors({
-      origin: process.env.ORIGIN,
+      origin: process.env.ORIGIN as string,
       credentials: true,
       allowedHeaders: ["Authorization", "Content-Type", "Access-Control-Allow-Credentials"],
       exposedHeaders: ["Authorization"],
     })
   );
+  app.use(auth());
 
   app.listen(port, () => {
     console.log(`Rooms service listening on port ${port}`);

@@ -6,4 +6,4 @@ CREATE TABLE rooms (
   create_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   duration integer,
   room_type text
-)
+);
