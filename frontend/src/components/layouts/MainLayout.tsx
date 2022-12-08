@@ -1,45 +1,29 @@
 import Link from "next/link";
 import { Inter } from "@next/font/google";
-import { AuthContext } from "../../pages/_app";
 import { useContext } from "react";
 import { NextRouter, useRouter } from "next/router";
 import { AuthService } from "../../utils/services";
+import { AuthContext, logout } from "../../utils/auth/auth";
 
 const inter = Inter();
 
-const logout = async (router: NextRouter) => {
-  const res = await fetch(`${AuthService}/auth/logout`, {
-    method: "DELETE",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    router.reload();
-  }
-};
-
 const Header = (props: { router: NextRouter }) => {
-  const { token, isAuth, userData } = useContext(AuthContext);
+  const session = useContext(AuthContext);
 
   return (
     <header className="flex justify-between bg-slate-100 p-10">
       <h1 className="text-2xl font-bold">letsthink</h1>
-      {!isAuth ? (
+      {!session.isAuth ? (
         <Link className="text-lg hover:underline" href="login">
           Login
         </Link>
       ) : (
         <div className="flex gap-6">
           <Link className="text-lg hover:underline" href="/">
-            Hi, {(userData as any).username}
+            Hi, {(session.userData as any).username}
           </Link>
           <Link className="text-lg hover:underline" href="">
-            <button onClick={() => logout(props.router)}>Logout</button>
+            <button onClick={logout}>Logout</button>
           </Link>
         </div>
       )}

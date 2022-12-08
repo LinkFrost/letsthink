@@ -1,7 +1,45 @@
 import { AuthService } from "../services";
-import { useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { User } from "../types/types";
 import jwt, { JwtPayload } from "jsonwebtoken";
+
+export const AuthContext = createContext({ token: "", isAuth: false, userData: {}, resetContext: () => {} });
+
+const login = async (email: string, password: string) => {
+  const res = await fetch(`${AuthService}/auth/login`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: email,
+      password: password,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    window.location.href = "/";
+  }
+};
+
+const logout = async () => {
+  const res = await fetch(`${AuthService}/auth/logout`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    window.location.href = "/";
+  }
+};
 
 const useSession = () => {
   const [token, setToken] = useState<string>("");
@@ -62,4 +100,4 @@ const useSession = () => {
   return { token: token, isAuth: isAuth, userData: user, resetContext: resetContext };
 };
 
-export default useSession;
+export { useSession, login, logout };
