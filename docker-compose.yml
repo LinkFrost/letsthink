@@ -37,8 +37,6 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
-      rooms-db:
-        condition: service_healthy
     environment:
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
       - ORIGIN=${ORIGIN}
@@ -70,8 +68,6 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
-      messages-db:
-        condition: service_healthy
     environment:
       - MESSAGES_PG_PASSWORD=${MESSAGES_PG_PASSWORD}
 
@@ -100,8 +96,6 @@ services:
       - "./polls/src:/usr/app/src"
     depends_on:
       event-bus:
-        condition: service_healthy
-      polls-db:
         condition: service_healthy
     environment:
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
@@ -170,8 +164,6 @@ services:
       - "./users/src:/usr/app/src"
     depends_on:
       event-bus:
-        condition: service_healthy
-      users-db:
         condition: service_healthy
     environment:
       - USERS_PG_PASSWORD=${USERS_PG_PASSWORD}
@@ -270,8 +262,6 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
-      query-db:
-        condition: service_healthy
     environment:
       - QUERY_PG_PASSWORD=${QUERY_PG_PASSWORD}
 
@@ -300,8 +290,6 @@ services:
       - "./vote/src:/usr/app/src"
     depends_on:
       event-bus:
-        condition: service_healthy
-      vote-db:
         condition: service_healthy
     environment:
       - VOTE_PG_PASSWORD=${VOTE_PG_PASSWORD}
