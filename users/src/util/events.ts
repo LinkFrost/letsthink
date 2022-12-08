@@ -102,7 +102,6 @@ export interface UserCreated extends Event {
     id: string;
     email: string;
     username: string;
-    password: string;
   };
 }
 

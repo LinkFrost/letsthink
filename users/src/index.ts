@@ -1,5 +1,5 @@
 import initExpress from "./init/initExpress.js";
-import { EventKeys } from "./util/events.js";
+import { EventKeys, UserCreated } from "./util/events.js";
 import initEventBus from "./init/initRabbit.js";
 import { string, z } from "zod";
 import * as argon2 from "argon2";
@@ -26,7 +26,7 @@ const { postgres } = await initPostgres("users-db");
 
 // Helper Functions
 const storeUser = async ({ username, email, password }: UserFields) => {
-  const query = "INSERT INTO users(username, email, password) VALUES($1, $2, $3) RETURNING username, email";
+  const query = "INSERT INTO users(username, email, password) VALUES($1, $2, $3) RETURNING id, username, email";
   const queryValues = [username, email, password];
   const result = await postgres.query(query, queryValues);
 
@@ -34,7 +34,7 @@ const storeUser = async ({ username, email, password }: UserFields) => {
     throw new Error("Could not store user");
   }
 
-  return result.rows[0];
+  return result.rows[0] as UserCreated["data"];
 };
 
 // REST Server
@@ -51,6 +51,10 @@ server.post("/users", async (req, res) => {
     const passwordHash = await argon2.hash(password);
 
     const user = await storeUser({ email, password: passwordHash, username });
+
+    const event: UserCreated = { key: "UserCreated", data: user };
+
+    confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
     res.send(user);
   } catch (error) {
