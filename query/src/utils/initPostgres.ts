@@ -3,7 +3,7 @@ dotenv.config();
 import pg from "pg";
 
 if (!process.env.QUERY_PG_PASSWORD) {
-  throw new Error("missing POSTGRES_PASSWORD environment variable");
+  throw new Error("missing QUERY_PG_PASSWORD environment variable");
 }
 
 export default async (host: string) =>
