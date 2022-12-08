@@ -34,7 +34,7 @@ export default function Login() {
           <label htmlFor="password">
             <p className="text-lg text-white">Password:</p>
           </label>{" "}
-          <input id="password" className="text-black" type="text" ref={password}></input>
+          <input id="password" className="text-black" type="password" ref={password}></input>
           <button onClick={(e) => handleSubmit(e)} className="mt-5 rounded-xl bg-white p-2 hover:bg-gray-300">
             Login
           </button>

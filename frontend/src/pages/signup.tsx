@@ -166,7 +166,7 @@ export default function SignUp<NextPage>() {
             onChange={(e) => handleFormChange(e, "password")}
             id="password"
             className="rounded-md px-2 py-[0.125rem] text-black"
-            type="text"
+            type="password"
           ></input>
           <p className="text-xs text-red-400">{formErrors.password}</p>
           {/* CONFIRM PASSWORD */}
@@ -178,7 +178,7 @@ export default function SignUp<NextPage>() {
             onChange={(e) => handleFormChange(e, "confirmPassword")}
             id="password"
             className="rounded-md px-2 py-[0.125rem] text-black"
-            type="text"
+            type="password"
           ></input>
           <p className="text-xs text-red-400">{formErrors.confirmPassword}</p>
           <button
