@@ -3,7 +3,7 @@ import { Inter } from "@next/font/google";
 import { useContext } from "react";
 import { NextRouter, useRouter } from "next/router";
 import { AuthService } from "../../utils/services";
-import { AuthContext, SignOut } from "../../utils/auth/auth";
+import { AuthContext, logout } from "../../utils/auth/auth";
 
 const inter = Inter();
 
@@ -23,7 +23,7 @@ const Header = (props: { router: NextRouter }) => {
             Hi, {(session.userData as any).username}
           </Link>
           <Link className="text-lg hover:underline" href="">
-            <button onClick={SignOut}>Logout</button>
+            <button onClick={logout}>Logout</button>
           </Link>
         </div>
       )}

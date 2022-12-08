@@ -3,7 +3,7 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import Suspend from "../components/utils/Suspend";
 import { AuthService, RoomsService } from "../utils/services";
-import { SignIn } from "../utils/auth/auth";
+import { login } from "../utils/auth/auth";
 
 export default function Login() {
   const email = useRef() as React.MutableRefObject<HTMLInputElement>;
@@ -13,7 +13,7 @@ export default function Login() {
   const handleSubmit = async (e: FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    SignIn(email.current.value, password.current.value);
+    login(email.current.value, password.current.value);
   };
 
   return (

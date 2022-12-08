@@ -5,7 +5,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 
 export const AuthContext = createContext({ token: "", isAuth: false, userData: {}, resetContext: () => {} });
 
-const SignIn = async (email: string, password: string) => {
+const login = async (email: string, password: string) => {
   const res = await fetch(`${AuthService}/auth/login`, {
     method: "POST",
     credentials: "include",
@@ -25,7 +25,7 @@ const SignIn = async (email: string, password: string) => {
   }
 };
 
-const SignOut = async () => {
+const logout = async () => {
   const res = await fetch(`${AuthService}/auth/logout`, {
     method: "DELETE",
     credentials: "include",
@@ -100,4 +100,4 @@ const useSession = () => {
   return { token: token, isAuth: isAuth, userData: user, resetContext: resetContext };
 };
 
-export { useSession, SignIn, SignOut };
+export { useSession, login, logout };
