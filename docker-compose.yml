@@ -131,16 +131,16 @@ services:
     ports:
       - 27018:27017
 
-  # users:
-  #   container_name: letsthink-users
-  #   build: "./users"
-  #   ports:
-  #     - 4006:4006
-  #   volumes:
-  #     - "./users/src:/usr/app/src"
-  #   depends_on:
-  #     event-bus:
-  #       condition: service_healthy
+  users:
+    container_name: letsthink-users
+    build: "./users"
+    ports:
+      - 4006:4006
+    volumes:
+      - "./users/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
 
   users-db:
     container_name: letsthink-users-db
