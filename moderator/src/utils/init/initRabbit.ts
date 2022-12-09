@@ -1,5 +1,5 @@
 import amqplib from "amqplib";
-import type { EventKeys } from "../types/events.js";
+import type { EventKeys } from "../../types/events.js";
 
 export default async (queue: string, eventKeys: EventKeys[]) => {
   // Connect to rabbitmq, create a channel
