@@ -11,9 +11,12 @@ const Header = (props: { router: NextRouter }) => {
   const session = useContext(AuthContext);
 
   return (
-    <header className="flex justify-between bg-slate-100 p-10">
+    <header className="flex items-center justify-between bg-slate-100 p-3 px-4">
       <Link href="/">
-        <h1 className="text-2xl font-bold">letsthink</h1>
+        <div className="flex items-center justify-center gap-1">
+          <img src="./favicon.ico" height="50" width="50"></img>
+          <h1 className="text-2xl font-bold">letsthink</h1>
+        </div>
       </Link>
       {!session.isAuth ? (
         <Link className="text-lg hover:underline" href="login">
@@ -41,7 +44,7 @@ type FooterLinkPropTypes = {
 
 const FooterLink = ({ href, children, target = "" }: FooterLinkPropTypes) => {
   return (
-    <li className="py-2">
+    <li className="py-1">
       <Link target={target} href={href} className="text-sm transition duration-75 ease-out hover:text-neutral-50 hover:underline">
         {children}
       </Link>
@@ -53,12 +56,11 @@ const Footer = () => {
   return (
     <footer className="mt-auto bg-black">
       <hr className="border-[1px] border-neutral-700"></hr>
-      <div className="mx-auto grid max-w-screen-lg grid-cols-2 justify-center gap-2 py-12 px-6 text-neutral-500 sm:grid-cols-4">
+      <div className="item mx-auto grid max-w-screen-lg grid-cols-2 justify-center gap-2 py-1 px-6 text-neutral-500 sm:grid-cols-4">
         <div>
           <h2 className="my-3 text-lg text-neutral-50">Links</h2>
           <ul>
             <FooterLink href="/">Home</FooterLink>
-            <FooterLink href="">My Profile</FooterLink>
             <FooterLink href="">My Rooms</FooterLink>
           </ul>
         </div>
@@ -67,26 +69,6 @@ const Footer = () => {
           <ul>
             <FooterLink target="_blank" href="">
               About
-            </FooterLink>
-            <FooterLink target="_blank" href="">
-              Roadmap
-            </FooterLink>
-            <FooterLink target="_blank" href="">
-              Contribute
-            </FooterLink>
-            <FooterLink target="_blank" href="">
-              Careers
-            </FooterLink>
-          </ul>
-        </div>
-        <div>
-          <h2 className="my-3 text-lg text-neutral-50">Connect</h2>
-          <ul>
-            <FooterLink target="_blank" href="">
-              Twitter
-            </FooterLink>
-            <FooterLink target="_blank" href="">
-              Discord
             </FooterLink>
             <FooterLink target="_blank" href="">
               GitHub
