@@ -75,6 +75,12 @@ eventBusChannel?.consume("query", (message) => {
   }
 });
 
+const fetchData = async () => {
+  const findResult = (await mongoCollection.find().toArray()) as any[];
+
+  return findResult[0];
+};
+
 app.get("/query", async (req, res) => {
-  res.send("Query Running");
+  res.send(await fetchData());
 });
