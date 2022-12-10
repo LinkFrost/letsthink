@@ -145,6 +145,7 @@ export default function SignUp<NextPage>() {
             type="text"
           ></input>
           <p className="text-xs text-red-400">{formErrors.email}</p>
+
           {/* USERNAME */}
           <label className="text-lg text-white" htmlFor="email">
             Username:
@@ -157,6 +158,7 @@ export default function SignUp<NextPage>() {
             type="text"
           ></input>
           <p className="text-xs text-red-400">{formErrors.username}</p>
+
           {/* PASSWORD */}
           <label className="text-lg text-white" htmlFor="email">
             Password:
@@ -169,6 +171,7 @@ export default function SignUp<NextPage>() {
             type="password"
           ></input>
           <p className="text-xs text-red-400">{formErrors.password}</p>
+
           {/* CONFIRM PASSWORD */}
           <label className="text-lg text-white" htmlFor="email">
             Confirm Password:
@@ -181,6 +184,7 @@ export default function SignUp<NextPage>() {
             type="password"
           ></input>
           <p className="text-xs text-red-400">{formErrors.confirmPassword}</p>
+
           <button
             disabled={signUpLoading}
             onClick={(e) => handleSubmit(e)}
