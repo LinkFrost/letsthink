@@ -52,6 +52,7 @@ export default function Create() {
       for (const pollOption of pollOptions) {
         if (!pollOption.title) {
           errors["poll_options"] = "Poll options cannot be blank!";
+          break;
         }
       }
     }
@@ -172,20 +173,18 @@ export default function Create() {
             <input id="name" className="rounded-md px-2 py-[0.125rem] text-black" ref={title} type="text" placeholder="Name of the room"></input>
             <p className="text-xs text-red-400">{formErrors.title}</p>
 
-            <div>
-              <label htmlFor="about">
-                <p className="text-lg ">About:</p>
-              </label>
-              <textarea
-                onChange={(e) => setAbout(e.target.value)}
-                id="about"
-                rows={4}
-                className="w-96 rounded-md px-2 py-[0.125rem] text-black"
-                placeholder="What the room is all about"
-                value={about}
-              ></textarea>
-              <p className="text-xs text-red-400">{formErrors.about}</p>
-            </div>
+            <label htmlFor="about">
+              <p className="text-lg ">About:</p>
+            </label>
+            <textarea
+              onChange={(e) => setAbout(e.target.value)}
+              id="about"
+              rows={4}
+              className="w-96 rounded-md px-2 py-[0.125rem] text-black"
+              placeholder="What the room is all about"
+              value={about}
+            ></textarea>
+            <p className="text-xs text-red-400">{formErrors.about}</p>
 
             <label htmlFor="duration">
               <p className="text-lg">Duration (min):</p>
@@ -268,9 +267,6 @@ export default function Create() {
           >
             {createLoading ? <Spinner shade={900} size={6} /> : "Create"}
           </button>
-          {/* <button disabled={signUpLoading} onClick={(e) => handleSubmit(e)} className="mt-5 mb-5 ml-auto rounded-xl bg-white p-2 px-4 hover:bg-gray-300">
-            {signUpLoading ? <Spinner shade={900} size={6} /> : "Login"}
-          </button> */}
           <p className={"text-center text-xs text-red-500"}>{submissionStatus.message}</p>
         </div>
       </main>

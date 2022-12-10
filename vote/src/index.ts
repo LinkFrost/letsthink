@@ -5,8 +5,8 @@ import z from "zod";
 import type { PollVoted, MessageVoted, RoomCreated, RoomExpired, MessageCreated, PollCreated } from "./types/events.js";
 
 // initialize rabbitmq, postgres, and express
-const eventBusChannel = await initRabbit("vote", ["PollVoted", "MessageVoted"]);
-const postgres = await initPostgres("vote-db");
+const eventBusChannel = await initRabbit("vote", ["RoomCreated", "PollCreated", "MessageCreated"]);
+const pgClient = await initPostgres("vote-db");
 const app = initExpress(4012);
 
 type ConsumeMessage = RoomCreated | RoomExpired | MessageCreated | PollCreated;
@@ -17,9 +17,9 @@ eventBusChannel.consume("vote", async (message) => {
 
   const { key, data }: ConsumeMessage = JSON.parse(message.content.toString());
 
-  if (message.fields.routingKey !== key) return;
+  console.log(data);
 
-  console.log(`vote service received ${key}`);
+  console.log(`Received event of type ${key}`);
 
   try {
     let query: string;
@@ -28,25 +28,25 @@ eventBusChannel.consume("vote", async (message) => {
     switch (key) {
       case "PollCreated":
         data.poll_options.forEach(async (curr) => {
-          query = "INSERT INTO messages (id) VALUES ($1)";
+          query = "INSERT INTO poll_options (id) VALUES ($1)";
           queryValues = [curr.id];
-          await postgres.query(query, queryValues);
+          pgClient.query(query, queryValues);
         });
         break;
       case "RoomCreated":
         query = "INSERT INTO rooms (id) VALUES ($1)";
         queryValues = [data.id];
-        await postgres.query(query, queryValues);
+        pgClient.query(query, queryValues);
         break;
       case "RoomExpired":
         query = "DELETE FROM rooms WHERE id=$1";
         queryValues = [data.id];
-        await postgres.query(query, queryValues);
+        pgClient.query(query, queryValues);
         break;
       case "MessageCreated":
         query = "INSERT INTO messages (id) VALUES ($1)";
         queryValues = [data.id];
-        await postgres.query(query, queryValues);
+        pgClient.query(query, queryValues);
         break;
     }
   } catch (err) {
@@ -70,7 +70,7 @@ app.post("/messages/:id", async (req, res) => {
     // check if room is expired (if it exists in rooms)
     let query = "SELECT * FROM rooms WHERE id=$1 RETURNING *";
     let queryValues = [room_id];
-    let result = await postgres.query(query, queryValues);
+    let result = await pgClient.query(query, queryValues);
 
     // room is expired
     if (result.rows.length === 0) {
@@ -80,7 +80,7 @@ app.post("/messages/:id", async (req, res) => {
     // room is not expired
     query = "UPDATE messages SET votes=votes+1 WHERE id=$1 RETURNING *";
     queryValues = [message_id];
-    result = await postgres.query(query, queryValues);
+    result = await pgClient.query(query, queryValues);
 
     if (result.rows.length === 0) {
       return res.status(400).json({ error: `message with id ${message_id} does not exist` });
@@ -111,7 +111,7 @@ app.post("/polls/:id", async (req, res) => {
     // check if room is expired (if it exists in rooms)
     let query = "SELECT * FROM rooms WHERE id=$1 RETURNING *";
     let queryValues = [room_id];
-    let result = await postgres.query(query, queryValues);
+    let result = await pgClient.query(query, queryValues);
 
     // room is expired
     if (result.rows.length === 0) {
@@ -121,7 +121,7 @@ app.post("/polls/:id", async (req, res) => {
     // room is not expired
     query = "UPDATE poll_options SET votes=votes+1 WHERE id=$1 RETURNING *";
     queryValues = [option_id];
-    result = await postgres.query(query, queryValues);
+    result = await pgClient.query(query, queryValues);
 
     if (result.rows.length === 0) {
       return res.status(400).json({ error: `poll option with id ${option_id} does not exist` });
