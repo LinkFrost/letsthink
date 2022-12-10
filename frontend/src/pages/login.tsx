@@ -3,12 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { AuthService } from "../utils/services";
 import Spinner from "../components/other/Spinner";
-
-type SubmissionStatus = {
-  color: "red" | "emerald" | "";
-  message: string;
-  status: "error" | "success" | "";
-};
+import { SubmissionStatus } from "../utils/types/types";
 
 export default function Login() {
   const email = useRef() as React.MutableRefObject<HTMLInputElement>;

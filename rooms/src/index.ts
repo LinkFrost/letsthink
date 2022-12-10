@@ -37,7 +37,7 @@ app.post("/rooms", async (req, res) => {
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
     // once this is sent, client should assume room id exists but does not know if query/other services are finished handling RoomCreated
-    res.send(result.rows[0]);
+    res.send({ success: result.rows[0] });
   } catch (err) {
     res.send({ error: err });
   }

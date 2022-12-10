@@ -5,15 +5,11 @@ import { z } from "zod";
 import { UsersService } from "../utils/services";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { SubmissionStatus } from "../utils/types/types";
 
 type FormFields = "email" | "username" | "password" | "confirmPassword";
 type FormType = Record<FormFields, string>;
 type FormError = Record<FormFields, string> | undefined;
-type SubmissionStatus = {
-  color: "red" | "emerald" | "";
-  message: string;
-  status: "error" | "success" | "";
-};
 
 const customErrorMap: z.ZodErrorMap = (issue, ctx) => {
   if (issue.code === z.ZodIssueCode.too_small) {

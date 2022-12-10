@@ -3,3 +3,9 @@ export type User = {
   email: string;
   username: string;
 };
+
+type SubmissionStatus = {
+  color: "red" | "emerald" | "";
+  message: string;
+  status: "error" | "success" | "";
+};
