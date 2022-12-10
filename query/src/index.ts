@@ -74,3 +74,7 @@ eventBusChannel?.consume("query", (message) => {
     eventBusChannel.ack(message);
   }
 });
+
+app.get("/query", async (req, res) => {
+  res.send("Query Running");
+});

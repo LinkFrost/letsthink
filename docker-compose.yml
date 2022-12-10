@@ -268,26 +268,18 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
-      query-db:
-        condition: service_healthy
     environment:
-      - QUERY_PG_PASSWORD=${QUERY_PG_PASSWORD}
+      - SH_MONGO_USER=${SH_MONGO_USER}
+      - SH_MONGO_PASSWORD=${SH_MONGO_PASSWORD}
 
   query-db:
     container_name: letsthink-query-db
-    image: postgres:alpine
-    restart: always
-    ports:
-      - 5444:5432
+    image: mongo:latest
     environment:
-      - POSTGRES_PASSWORD=${QUERY_PG_PASSWORD}
-    volumes:
-      - "./query/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
-    healthcheck:
-      test: pg_isready --username=postgres
-      interval: 25s
-      timeout: 30s
-      retries: 10
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - 27019:27017
 
   vote:
     container_name: letsthink-vote
