@@ -13,21 +13,11 @@ const subscriptions: EventKeys[] = ["RoomVisualized", "RoomExpired"];
 const { eventBusChannel, confirmChannel } = await initEventBus(queue, subscriptions);
 const { mongoCollection } = await initMongo();
 
-// Initializing db
-try {
-  // create a document to insert
-  const findResult = (await mongoCollection.find().toArray()) as any[];
-
-  if (findResult.length < 1) {
-    const doc = {};
-
-    await mongoCollection.insertOne(doc);
-  }
-} catch (e) {
-  console.log(e);
-}
-
 const app = initExpress(4013);
+
+const getRoomData = async (room_id: string) => {
+  return {};
+};
 
 // Handle Event Bus Subscriptions
 eventBusChannel.consume(queue, async (message) => {
@@ -39,9 +29,43 @@ eventBusChannel.consume(queue, async (message) => {
 
   try {
     switch (key) {
-      case "RoomVisualized":
-        break;
       case "RoomExpired":
+        const { id } = data;
+
+        // Get Room Data by Id
+        const resData = await getRoomData(id);
+
+        // Generate Image for RoomData
+        const response = await fetch("http://visual-generator:4010/visual", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id: id, roomData: [] }),
+        });
+
+        // Get Image URL
+        const { imageUrl } = await response.json();
+
+        /* Update DB
+        await mongoCollection.updateOne(
+          { email: data.user_email },
+          {
+            $push: {
+              visualizations: data.imageUrl,
+            },
+          },
+          { upsert: true }
+        );
+        */
+
+        // Publish Visualization
+        const event: RoomVisualized = {
+          key: "RoomVisualized",
+          data: { id: id, room_id: "string", title: "string", user_email: "string", username: "string", imageUrl: imageUrl },
+        };
+        eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+
         break;
       default:
     }
@@ -53,5 +77,10 @@ eventBusChannel.consume(queue, async (message) => {
 });
 
 app.get("/visualizer", async (req, res) => {
+  const event: RoomExpired = {
+    key: "RoomExpired",
+    data: { id: "string" },
+  };
+  eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
   res.send("test");
 });

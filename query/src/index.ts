@@ -4,6 +4,7 @@ import initExpress from "./utils/initExpress.js";
 import { auth } from "./utils/initExpress.js";
 
 import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, PollCreated, RoomVisualized, MessageCreated } from "./types/events.js";
+import { ObjectId } from "mongodb";
 
 const { eventBusChannel } = await initRabbit("query", [
   "RoomCreated",
@@ -17,20 +18,6 @@ const { eventBusChannel } = await initRabbit("query", [
 ]);
 
 const { mongoCollection } = await initMongo();
-
-// Initializing db
-try {
-  // create a document to insert
-  const findResult = (await mongoCollection.find().toArray()) as any[];
-
-  if (findResult.length < 1) {
-    const doc = {};
-
-    await mongoCollection.insertOne(doc);
-  }
-} catch (e) {
-  console.log(e);
-}
 
 const app = initExpress(4011);
 

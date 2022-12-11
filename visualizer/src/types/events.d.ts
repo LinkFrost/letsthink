@@ -33,7 +33,6 @@ export interface RoomExpired extends Event {
   key: "RoomExpired";
   data: {
     id: string;
-    room_type: "message" | "poll";
   };
 }
 
