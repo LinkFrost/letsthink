@@ -6,3 +6,4 @@ session-cache/
 .vscode
 dev.env
 __pycache__/
+env/

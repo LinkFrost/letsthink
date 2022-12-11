@@ -1,48 +1,77 @@
-from typing import Union
-import pika
+import json
+import boto3
+import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+
+S3_ACCESS_KEY = os.environ.get("AWS_S3_ACCESS_KEY_ID")
+S3_SECRET = os.environ.get("AWS_S3_SECRET_ACCESS_KEY")
+
+if (not S3_ACCESS_KEY) or (not S3_SECRET):
+    print("NO ENV VARS FOUND")
 
 
-def initRabbit():
-    exchange = "event-bus"
-    queue = "visualizer"
-    eventKeys = ["RoomExpired"]
+s3_bucket_name = "letsthink-viz"
+service = "s3"
+region = "us-east-2"
 
-    eventBusConnection = pika.BlockingConnection(
-        pika.ConnectionParameters(
-            pika.ConnectionParameters(
-                host='localhost', port="5672"
-            )
-        )
+s3_client = boto3.client(
+    service_name=service,
+    region_name=region,
+    aws_access_key_id=S3_ACCESS_KEY,
+    aws_secret_access_key=S3_SECRET
+)
+
+
+def upload_file(file_path: str, file_key: str, file_extension: str):
+    def make_image_url():
+        return f"https://{s3_bucket_name}.s3.{region}.amazonaws.com/{file_key}"
+
+    extra_args = {
+        "ContentType": f"image/{file_extension}"
+    }
+
+    res = s3_client.upload_file(
+        file_path, s3_bucket_name, file_key, extra_args
     )
 
-    eventBusChannel = eventBusConnection.channel()
-
-    eventBusChannel.exchange_declare(
-        exchange=exchange, exchange_type="direct", durable=False)
-
-    eventBusChannel.queue_declare(queue=queue)
-
-    for key in eventKeys:
-        eventBusChannel.queue_bind(
-            queue=queue, exchange=exchange,  routing_key=key
-        )
-
-    return eventBusChannel
+    return make_image_url()
 
 
 app = FastAPI()
 
-# eventBusChannel = initRabbit()
 
-
-@ app.get("/")
+@app.get("/")
 def read_root():
+    return {"Visualizer Listening": "Hello World"}
 
-    return {"Hello": "World"}
+
+@app.get("/visual")
+def getVisual():
+    # Fill in
+    return None
 
 
-@ app.get("/test")
-def read_item():
-    return {"Testing": "hot reload"}
+@app.post("/visual")
+def generateVisual(RoomData: dict):
+    img_path = RoomData["img"]
+    img_name = RoomData["filename"]
+    img_type = RoomData["img_type"]
+
+    if not img_path or not img_name or not img_type:
+        raise HTTPException(status_code=400, detail="invalid json payload")
+
+    try:
+        image_url = upload_file(
+            file_path=f"src/{img_path}",
+            file_key=img_name,
+            file_extension=img_type
+        )
+
+        return {
+            "imageUrl": image_url
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail="issue processing image")
