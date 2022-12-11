@@ -1,14 +1,17 @@
-import initRabbit from "./utils/initRabbit.js";
-import initMongo from "./utils/initMongo.js";
+import { EventKeys, RoomExpired, RoomVisualized } from "./types/events.js";
 import initExpress from "./utils/initExpress.js";
-import { auth } from "./utils/initExpress.js";
+import initEventBus from "./utils/initRabbit.js";
+import initMongo from "./utils/initMongo.js";
 
-import type { RoomCreated, RoomExpired, RoomVisualized } from "./types/events.js";
+// Event Types that email service is interested in
+type Event = RoomVisualized | RoomExpired;
 
-const { eventBusChannel } = await initRabbit("query", ["RoomCreated", "RoomExpired", "RoomVisualized"]);
+const queue = "visualizer";
+const subscriptions: EventKeys[] = ["RoomVisualized", "RoomExpired"];
 
+// Initialize outside communications
+const { eventBusChannel, confirmChannel } = await initEventBus(queue, subscriptions);
 const { mongoCollection } = await initMongo();
-console.log("MONGO INITED");
 
 // Initializing db
 try {
@@ -26,38 +29,29 @@ try {
 
 const app = initExpress(4013);
 
-type Event = RoomCreated | RoomVisualized | RoomExpired;
+// Handle Event Bus Subscriptions
+eventBusChannel.consume(queue, async (message) => {
+  if (!message) return;
 
-// Listen for incoming messages
-eventBusChannel?.consume("query", (message) => {
-  if (message !== null) {
-    const { key, data }: Event = JSON.parse(message.content.toString());
+  const { key, data }: Event = JSON.parse(message.content.toString());
 
-    console.log(`Received event of type ${key}`);
+  console.log(`Received event of type ${key}`);
 
+  try {
     switch (key) {
+      case "RoomVisualized":
+        break;
+      case "RoomExpired":
+        break;
       default:
-      case "RoomCreated": {
-        break;
-      }
-      case "RoomExpired": {
-        break;
-      }
-      case "RoomVisualized": {
-        break;
-      }
     }
-
-    eventBusChannel.ack(message);
+  } catch (err) {
+    eventBusChannel.nack(message);
   }
+
+  eventBusChannel.ack(message);
 });
 
-const fetchData = async () => {
-  const findResult = (await mongoCollection.find().toArray()) as any[];
-
-  return findResult[0];
-};
-
 app.get("/visualizer", async (req, res) => {
-  res.send(await fetchData());
+  res.send("test");
 });

@@ -13,7 +13,7 @@ const subscriptions: EventKeys[] = ["RoomVisualized", "RoomExpired"];
 // Initialize outside communications
 const { eventBusChannel, confirmChannel } = await initEventBus(queue, subscriptions);
 const { mongoCollection } = await initMongo();
-const app = initExpress(4007);
+const app = initExpress(4005);
 const { sendEmail } = await sendInBlue();
 
 // Handle Event Bus Subscriptions
