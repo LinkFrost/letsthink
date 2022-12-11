@@ -1,20 +1,33 @@
 import { EventKeys, RoomExpired, RoomVisualized } from "./types/events.js";
 import initExpress from "./utils/initExpress.js";
 import initEventBus from "./utils/initRabbit.js";
-import sendInBlue from "./utils/sendInBlue.js";
 import initMongo from "./utils/initMongo.js";
 
 // Event Types that email service is interested in
 type Event = RoomVisualized | RoomExpired;
 
-const queue = "email";
+const queue = "visualizer";
 const subscriptions: EventKeys[] = ["RoomVisualized", "RoomExpired"];
 
 // Initialize outside communications
 const { eventBusChannel, confirmChannel } = await initEventBus(queue, subscriptions);
 const { mongoCollection } = await initMongo();
-const app = initExpress(4005);
-const { sendEmail } = await sendInBlue();
+
+// Initializing db
+try {
+  // create a document to insert
+  const findResult = (await mongoCollection.find().toArray()) as any[];
+
+  if (findResult.length < 1) {
+    const doc = {};
+
+    await mongoCollection.insertOne(doc);
+  }
+} catch (e) {
+  console.log(e);
+}
+
+const app = initExpress(4013);
 
 // Handle Event Bus Subscriptions
 eventBusChannel.consume(queue, async (message) => {
@@ -27,19 +40,8 @@ eventBusChannel.consume(queue, async (message) => {
   try {
     switch (key) {
       case "RoomVisualized":
-        await sendEmail(data);
-        await mongoCollection.updateOne(
-          { email: data.user_email },
-          {
-            $push: {
-              visualizations: data.imageUrl,
-            },
-          },
-          { upsert: true }
-        );
         break;
       case "RoomExpired":
-        console.log("EMAIL: GOT ROOM EXPIRED EVENT");
         break;
       default:
     }
@@ -50,17 +52,6 @@ eventBusChannel.consume(queue, async (message) => {
   eventBusChannel.ack(message);
 });
 
-// REST Server
-app.post("/testSend", (req, res) => {
-  const event: RoomVisualized = { key: "RoomVisualized", data: req.body };
-
-  confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
-
-  res.sendStatus(200);
-});
-
-app.get("/checkMongo", async (req, res) => {
-  const viz = await mongoCollection.find({}).toArray();
-
-  res.send(viz);
+app.get("/visualizer", async (req, res) => {
+  res.send("test");
 });
