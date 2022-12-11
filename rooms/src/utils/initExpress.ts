@@ -28,12 +28,15 @@ const auth = () => {
 };
 
 export default (port: number) => {
-  const app = express();
+  if (!process.env.ORIGIN) {
+    throw new Error("missing ORIGIN environment variable");
+  }
 
+  const app = express();
   app.use(express.json());
   app.use(
     cors({
-      origin: process.env.ORIGIN as string,
+      origin: process.env.ORIGIN,
       credentials: true,
       allowedHeaders: ["Authorization", "Content-Type", "Access-Control-Allow-Credentials"],
       exposedHeaders: ["Authorization"],
@@ -45,5 +48,5 @@ export default (port: number) => {
     console.log(`Rooms service listening on port ${port}`);
   });
 
-  return app;
+  return { app };
 };

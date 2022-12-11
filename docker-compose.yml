@@ -223,6 +223,23 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+      expiration-db:
+        condition: service_healthy
+    environment:
+      - EXPIRATION_REDIS_PASSWORD=${EXPIRATION_REDIS_PASSWORD}
+
+  expiration-db:
+    container_name: letsthink-expiration-db
+    image: redis:alpine
+    volumes:
+      - ./expiration/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${EXPIRATION_REDIS_PASSWORD}
+    restart: always
+    healthcheck:
+      test: redis-cli ping
+      interval: 25s
+      timeout: 30s
+      retries: 10
 
   site-health:
     container_name: letsthink-site-health

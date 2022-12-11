@@ -21,11 +21,10 @@ export default function Home() {
       credentials: "include",
       body: JSON.stringify({
         user_id: (session.userData as any).id,
-        title: "HIIIIIII",
-        about: "This is my room",
-        duration: 15,
+        title: "title",
+        about: "about",
+        duration: 1,
         room_type: "poll",
-        expired: false,
       }),
     });
   };
