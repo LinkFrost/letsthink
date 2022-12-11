@@ -257,6 +257,9 @@ services:
     depends_on:
       event-bus:
         condition: service_healthy
+    environment:
+      - SH_MONGO_USER=${SH_MONGO_USER}
+      - SH_MONGO_PASSWORD=${SH_MONGO_PASSWORD}
 
   visualizer-db:
     container_name: letsthink-visualizer-db
