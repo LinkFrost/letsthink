@@ -5,7 +5,7 @@ import z from "zod";
 import type { PollVoted, MessageVoted, RoomCreated, RoomExpired, MessageCreated, PollCreated } from "./types/events.js";
 
 // initialize rabbitmq, postgres, and express
-const eventBusChannel = await initRabbit("vote", ["RoomCreated", "PollCreated", "MessageCreated"]);
+const eventBusChannel = await initRabbit("vote", ["RoomCreated", "PollCreated", "MessageCreated", "RoomExpired"]);
 const pgClient = await initPostgres("vote-db");
 const app = initExpress(4012);
 
@@ -15,9 +15,9 @@ type ConsumeMessage = RoomCreated | RoomExpired | MessageCreated | PollCreated;
 eventBusChannel.consume("vote", async (message) => {
   if (message === null) return;
 
-  const { key, data }: ConsumeMessage = JSON.parse(message.content.toString());
+  // console.log(message.fields.routingKey);
 
-  console.log(data);
+  const { key, data }: ConsumeMessage = JSON.parse(message.content.toString());
 
   console.log(`Received event of type ${key}`);
 
@@ -48,6 +48,8 @@ eventBusChannel.consume("vote", async (message) => {
         queryValues = [data.id];
         pgClient.query(query, queryValues);
         break;
+      default:
+        console.log(data);
     }
   } catch (err) {
     eventBusChannel.nack(message);
@@ -68,7 +70,7 @@ app.post("/messages/:id", async (req, res) => {
     const { room_id } = req.body;
 
     // check if room is expired (if it exists in rooms)
-    let query = "SELECT * FROM rooms WHERE id=$1 RETURNING *";
+    let query = "SELECT * FROM rooms WHERE id=$1";
     let queryValues = [room_id];
     let result = await pgClient.query(query, queryValues);
 
@@ -109,7 +111,7 @@ app.post("/polls/:id", async (req, res) => {
     const { room_id } = req.body;
 
     // check if room is expired (if it exists in rooms)
-    let query = "SELECT * FROM rooms WHERE id=$1 RETURNING *";
+    let query = "SELECT * FROM rooms WHERE id=$1";
     let queryValues = [room_id];
     let result = await pgClient.query(query, queryValues);
 
@@ -129,10 +131,10 @@ app.post("/polls/:id", async (req, res) => {
 
     // send event to rabbitMQ
     const event: PollVoted = { key: "PollVoted", data: result.rows[0] };
+    // const event = { key: "PollVoted2", data: result.rows[0] };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
-    //
-    res.send(result.rows[0]);
+    res.status(200).send({ success: result.rows[0] });
   } catch (err) {
     res.send({ error: err });
   }

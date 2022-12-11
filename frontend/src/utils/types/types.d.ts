@@ -9,3 +9,19 @@ type SubmissionStatus = {
   message: string;
   status: "error" | "success" | "";
 };
+
+export interface PollOptionType {
+  id: string;
+  title: string;
+  votes: number;
+  room_id: string;
+  position: number;
+}
+
+export interface PollOptionColor {
+  color: string;
+  hover: string;
+  selected: string;
+  border: string;
+  inactive: string;
+}

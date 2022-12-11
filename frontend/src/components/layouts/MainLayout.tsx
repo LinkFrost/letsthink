@@ -13,7 +13,7 @@ const Header = (props: { router: NextRouter }) => {
   const session = useContext(AuthContext);
 
   return (
-    <header className="flex items-center justify-between border-b-2 border-neutral-700 bg-black p-3 px-4">
+    <header className="flex items-center justify-between border-b-2 border-neutral-700 bg-black p-6 px-20 lg:px-52">
       <Link href="/">
         <div className="flex items-center justify-center gap-1">
           <Image alt="logo" src="/favicon.ico" height="50" width="50"></Image>
@@ -26,7 +26,7 @@ const Header = (props: { router: NextRouter }) => {
         </Link>
       ) : (
         <div className="flex gap-12">
-          <Link className="text-lg text-white hover:underline" href="my-rooms">
+          <Link className="text-lg text-white hover:underline" href="rooms/me">
             My Rooms
           </Link>
           <div className="">

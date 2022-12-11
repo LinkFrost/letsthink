@@ -1,4 +1,4 @@
-export default function my() {
+export default function me() {
   return (
     <div>
       <p>Hi</p>
