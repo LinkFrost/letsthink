@@ -52,7 +52,7 @@ eventBusChannel.consume(queue, async (message) => {
           { email: data.user_email },
           {
             $push: {
-              visualizations: data.imageUrl,
+              visualizations: {imageUrl: data.imageUrl, room_id: room_id},
             },
           },
           { upsert: true }
