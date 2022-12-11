@@ -1,5 +1,5 @@
 import initRabbit from "./utils/initRabbit.js";
-import initPostgres from "./utils/initPostgres.js";
+import initMongo from "./utils/initMongo.js";
 import initExpress from "./utils/initExpress.js";
 import { auth } from "./utils/initExpress.js";
 
@@ -15,7 +15,23 @@ const { eventBusChannel } = await initRabbit("query", [
   "PollCreated",
   "MessageCreated",
 ]);
-const pgClient = await initPostgres("query-db");
+
+const { mongoCollection } = await initMongo();
+
+// Initializing db
+try {
+  // create a document to insert
+  const findResult = (await mongoCollection.find().toArray()) as any[];
+
+  if (findResult.length < 1) {
+    const doc = {};
+
+    await mongoCollection.insertOne(doc);
+  }
+} catch (e) {
+  console.log(e);
+}
+
 const app = initExpress(4011);
 
 type Event = RoomCreated | PollCreated | PollVoted | MessageVoted | MessageModerated | RoomVisualized | RoomExpired | MessageCreated;
@@ -57,4 +73,14 @@ eventBusChannel?.consume("query", (message) => {
 
     eventBusChannel.ack(message);
   }
+});
+
+const fetchData = async () => {
+  const findResult = (await mongoCollection.find().toArray()) as any[];
+
+  return findResult[0];
+};
+
+app.get("/query", async (req, res) => {
+  res.send(await fetchData());
 });

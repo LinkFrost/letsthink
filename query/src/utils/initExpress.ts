@@ -41,7 +41,7 @@ export default (port: number) => {
   );
 
   app.listen(port, () => {
-    console.log(`Rooms service listening on port ${port}`);
+    console.log(`Query service listening on port ${port}`);
   });
 
   return app;
