@@ -247,13 +247,13 @@ services:
     ports:
       - 27017:27017
 
-  visualizer:
-    container_name: letsthink-visualizer
-    build: "./visualizer"
+  visual-generator:
+    container_name: letsthink-visual-generator
+    build: "./visual-generator"
     ports:
       - 4010:4010
     volumes:
-      - "./visualizer/src:/usr/app/src"
+      - "./visual-generator/src:/usr/app/src"
     depends_on:
       event-bus:
         condition: service_healthy

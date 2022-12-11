@@ -41,15 +41,15 @@ def upload_file(file_path: str, file_key: str, file_extension: str):
 app = FastAPI()
 
 
-@app.get("/")
-def read_root():
-    return {"Visualizer Listening": "Hello World"}
-
-
 @app.get("/visual")
 def getVisual():
     # Fill in
     return None
+
+
+@app.get("/")
+def read_root():
+    return {"Visualizer Listening": "Hello World"}
 
 
 @app.post("/visual")
