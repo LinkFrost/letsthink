@@ -53,7 +53,6 @@ eventBusChannel?.consume("query", async (message) => {
         // RoomData insert room, add expired=false
         // const { id, user_id, title, about, duration, create_date, room_type } = data;
         const roomData = { ...data, expired: false };
-        if (!["message", "poll"].includes(roomData.room_type)) return;
         const related = roomData.room_type === "message" ? { messages: [] } : { poll_options: [] };
 
         await mongoCollection.insertOne({ ...roomData, ...related });
