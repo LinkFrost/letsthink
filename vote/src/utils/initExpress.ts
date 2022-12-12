@@ -10,5 +10,5 @@ export default (port: number) => {
     console.log(`Vote service listening on port ${port}`);
   });
 
-  return app;
+  return { app };
 };

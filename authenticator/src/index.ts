@@ -85,13 +85,13 @@ app.post("/auth/login", async (req, res) => {
     const userQuery = await pgClient.query("SELECT * FROM users WHERE email=$1", [email]).then((res) => res.rows);
 
     if (userQuery.length !== 1) {
-      return res.status(400).send({ error: `User with email ${email} does not exist!` });
+      return res.status(400).send({ loginError: `User with email ${email} does not exist!` });
     }
 
     const userData: UserData = userQuery[0];
 
     if (!(await argon2.verify(userData.password, password))) {
-      return res.status(400).send({ error: "Incorrect password!" });
+      return res.status(400).send({ loginError: "Incorrect password!" });
     }
 
     const tokenUserData = {

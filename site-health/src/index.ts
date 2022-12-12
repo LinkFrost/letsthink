@@ -64,6 +64,9 @@ type Event = RoomCreated | RoomExpired | MessageModerated | UserCreated | PollVo
 eventBusChannel.consume("site-health", async (message) => {
   if (message !== null) {
     const { key, data }: Event = JSON.parse(message.content.toString());
+
+    console.log(`Received event of type ${key}`);
+
     const siteHealthData: SiteHealthData = await fetchSiteHealthData();
 
     switch (key) {

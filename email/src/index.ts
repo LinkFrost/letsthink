@@ -1,19 +1,19 @@
-import { EventKeys, RoomVisualized } from "./types/events.js";
+import { EventKeys, RoomExpired, RoomVisualized } from "./types/events.js";
 import initExpress from "./utils/initExpress.js";
 import initEventBus from "./utils/initRabbit.js";
 import sendInBlue from "./utils/sendInBlue.js";
 import initMongo from "./utils/initMongo.js";
 
 // Event Types that email service is interested in
-type Event = RoomVisualized;
+type Event = RoomVisualized | RoomExpired;
 
 const queue = "email";
-const subscriptions: EventKeys[] = ["RoomVisualized"];
+const subscriptions: EventKeys[] = ["RoomVisualized", "RoomExpired"];
 
 // Initialize outside communications
 const { eventBusChannel, confirmChannel } = await initEventBus(queue, subscriptions);
 const { mongoCollection } = await initMongo();
-const app = initExpress(4007);
+const app = initExpress(4005);
 const { sendEmail } = await sendInBlue();
 
 // Handle Event Bus Subscriptions
@@ -37,6 +37,9 @@ eventBusChannel.consume(queue, async (message) => {
           },
           { upsert: true }
         );
+        break;
+      case "RoomExpired":
+        console.log("EMAIL: GOT ROOM EXPIRED EVENT");
         break;
       default:
     }

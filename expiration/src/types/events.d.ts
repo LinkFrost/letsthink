@@ -23,9 +23,10 @@ export interface RoomCreated extends Event {
     user_id: string;
     title: string;
     about: string;
-    create_date: string;
-    duration: number;
     room_type: "message" | "poll";
+    duration: number;
+    create_date: string;
+    expire_date: string;
   };
 }
 
@@ -33,7 +34,6 @@ export interface RoomExpired extends Event {
   key: "RoomExpired";
   data: {
     id: string;
-    room_type: "message" | "poll";
   };
 }
 
@@ -66,6 +66,7 @@ export interface MessageVoted extends Event {
   data: {
     id: string;
     votes: number;
+    room_id: string;
   };
 }
 
@@ -85,6 +86,7 @@ export interface PollVoted extends Event {
   data: {
     id: string;
     votes: string;
+    room_id: string;
   };
 }
 

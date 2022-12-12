@@ -4,7 +4,7 @@ import express from "express";
 import cors from "cors";
 import jwt from "jsonwebtoken";
 
-const auth = () => {
+export const auth = () => {
   return function verifyToken(req: any, res: any, next: any) {
     const header = req.headers["authorization"];
     const token = header && header.split(" ")[1];
@@ -28,25 +28,13 @@ const auth = () => {
 };
 
 export default (port: number) => {
-  if (!process.env.ORIGIN) {
-    throw new Error("missing ORIGIN environment variable");
-  }
-
   const app = express();
   app.use(express.json());
-  app.use(
-    cors({
-      origin: process.env.ORIGIN,
-      credentials: true,
-      allowedHeaders: ["Authorization", "Content-Type", "Access-Control-Allow-Credentials"],
-      exposedHeaders: ["Authorization"],
-    })
-  );
-  app.use(auth());
+  app.use(cors());
 
   app.listen(port, () => {
-    console.log(`Rooms service listening on port ${port}`);
+    console.log(`Visualizer service listening on port ${port}`);
   });
 
-  return { app };
+  return app;
 };
