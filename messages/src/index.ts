@@ -32,13 +32,11 @@ eventBusChannel.consume(queue, async (message) => {
         }
 
         case "RoomExpired": {
-          const { room_id, room_type } = data;
+          const { id } = data;
 
-          if (room_type === "message") {
-            const queryText = "DELETE FROM rooms WHERE id=$1";
-            const queryValues = [room_id];
-            pgClient.query(queryText, queryValues);
-          }
+          const queryText = "DELETE FROM rooms WHERE id=$1";
+          const queryValues = [id];
+          pgClient.query(queryText, queryValues);
 
           break;
         }
