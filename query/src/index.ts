@@ -94,17 +94,32 @@ eventBusChannel?.consume("query", async (message) => {
   }
 });
 
-const fetchData = async () => {
-  const findResult = (await mongoCollection.find().toArray()) as any[];
+const fetchRoom = async (id: string) => {
+  const room = await mongoCollection.findOne({ id: id });
 
-  return findResult[0];
+  return room;
 };
 
-app.get("/query", async (req, res) => {
-  res.send(await fetchData());
+const fetchRoomsByUser = async (id: string) => {
+  const room = await mongoCollection.findOne({ id: id });
+
+  return room;
+};
+
+app.get("/query/:room_id", async (req, res) => {
+  try {
+    const { room_id } = req.body.params;
+    const room = await fetchRoom(room_id);
+
+    res.status(200).send(room);
+  } catch (err) {
+    res.status(500).send({ error: err });
+  }
 });
 
-app.get("/checkMongo", async (req, res) => {
-  const viz = await mongoCollection.find({}).toArray();
-  res.send(viz);
+app.get("/query/:user_id", async (req, res) => {
+  try {
+  } catch (err) {
+    res.status(500).send({ error: err });
+  }
 });

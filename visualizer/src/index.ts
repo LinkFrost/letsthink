@@ -1,10 +1,31 @@
-import { EventKeys, RoomExpired, RoomVisualized } from "./types/events.js";
+import { EventKeys, RoomExpired, RoomVisualized, PollOptions } from "./types/events.js";
 import initExpress from "./utils/initExpress.js";
 import initEventBus from "./utils/initRabbit.js";
 import initMongo from "./utils/initMongo.js";
 
 // Event Types that email service is interested in
 type Event = RoomVisualized | RoomExpired;
+
+type Room = {
+  id: string;
+  user_id: string;
+  title: string;
+  about: string;
+  room_type: "message" | "poll";
+  duration: number;
+  create_date: string;
+  expire_date: string;
+};
+
+type Message = { votes: number; id: string; room_id: string; content: string };
+
+type Poll = { room_id: string; poll_options: PollOptions[] };
+
+type MessageRoom = Room & { messages: Message[] };
+
+type PollRoom = Room & { polls: Poll[] };
+
+type RoomData = MessageRoom | PollRoom;
 
 const queue = "visualizer";
 const subscriptions: EventKeys[] = ["RoomVisualized", "RoomExpired"];
@@ -16,7 +37,13 @@ const { mongoCollection } = await initMongo();
 const app = initExpress(4013);
 
 const getRoomData = async (room_id: string) => {
-  return {};
+  try {
+    const response = await fetch(`http://query:4011/query/${room_id}`);
+    return await response.json();
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
 };
 
 // Handle Event Bus Subscriptions
@@ -33,7 +60,13 @@ eventBusChannel.consume(queue, async (message) => {
         const { id } = data;
 
         // Get Room Data by Id
-        const resData = await getRoomData(id);
+        const resData: RoomData = await getRoomData(id);
+        console.log("RESDATA", resData);
+
+        if (!resData.id) {
+          console.log("Room Data Invalid");
+          return;
+        }
 
         // Generate Image for RoomData
         const response = await fetch("http://visual-generator:4010/visual", {
@@ -41,23 +74,22 @@ eventBusChannel.consume(queue, async (message) => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ id: id, roomData: [] }),
+          body: JSON.stringify({ id: id, roomData: resData }),
         });
 
         // Get Image URL
         const { imageUrl } = await response.json();
 
-        /* Update DB
+        // Update DB
         await mongoCollection.updateOne(
-          { email: data.user_email },
+          { email: "gsdfg@gmail.com" },
           {
             $push: {
-              visualizations: {imageUrl: data.imageUrl, room_id: room_id},
+              visualizations: { imageUrl: "url", room_id: "id" },
             },
           },
           { upsert: true }
         );
-        */
 
         // Publish Visualization
         const event: RoomVisualized = {

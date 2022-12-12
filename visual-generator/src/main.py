@@ -1,6 +1,7 @@
 import json
 import boto3
 import os
+import matplotlib.pyplot as plt
 
 from fastapi import FastAPI, HTTPException
 
@@ -54,19 +55,31 @@ def read_root():
 
 @app.post("/visual")
 def generateVisual(RoomData: dict):
-    img_path = RoomData["img"]
-    img_name = RoomData["filename"]
-    img_type = RoomData["img_type"]
+    print("ROOM DATA")
+    print(RoomData)
+    roomId = RoomData["id"]
+    roomData = RoomData["roomData"]
+
+    plt.plot([0, 1, 2, 3, 4], [0, 2, 4, 8, 16])
+    plt.xlabel('Months')
+    plt.ylabel('Movies watched')
+    plt.savefig('test.jpg')
+
+    img_path = "test.jpg"
+    img_name = "test.jpg"
+    img_type = 'jpg'
 
     if not img_path or not img_name or not img_type:
         raise HTTPException(status_code=400, detail="invalid json payload")
 
     try:
         image_url = upload_file(
-            file_path=f"src/{img_path}",
+            file_path=img_path,
             file_key=img_name,
             file_extension=img_type
         )
+
+        os.remove(img_path)
 
         return {
             "imageUrl": image_url
@@ -75,3 +88,8 @@ def generateVisual(RoomData: dict):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail="issue processing image")
+
+
+@ app.on_event("startup")
+def startup():
+    print("VIZ GEN STARTED")
