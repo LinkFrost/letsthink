@@ -4,6 +4,7 @@ import { AuthContext } from "../../utils/auth/auth";
 import Spinner from "../../components/other/Spinner";
 import { SubmissionStatus } from "../../utils/types/types";
 import { PollsService, RoomsService } from "../../utils/services";
+import Router from "next/router";
 
 type FormFields = "title" | "about" | "type" | "duration" | "poll_options";
 type FormType = Record<FormFields, string | number>;
@@ -112,8 +113,8 @@ export default function Create() {
       setCreateLoading(false);
     }
 
-    if (roomResData.success) {
-      const room_id = roomResData.success.id;
+    if (roomRes.ok) {
+      const room_id = roomResData.id;
 
       if (type == "poll") {
         const poll = {
@@ -143,13 +144,15 @@ export default function Create() {
         if (pollResData.success) {
           setTimeout(() => {
             setCreateLoading(false);
-            window.location.href = `/rooms/${room_id}`;
+            // window.location.href = `/rooms/${room_id}`;
+            Router.push(`/rooms/${room_id}`);
           }, 2500);
         }
       } else {
         setTimeout(() => {
           setCreateLoading(false);
-          window.location.href = `/rooms/${room_id}`;
+          // window.location.href = `/rooms/${room_id}`;
+          Router.push(`/rooms/${room_id}`);
         }, 2500);
       }
     }

@@ -33,3 +33,17 @@ export interface MessageType {
   room_id: string;
   votes: number;
 }
+
+export interface RoomDataType {
+  expired: boolean;
+  id: string;
+  user_id: string;
+  title: string;
+  about: string;
+  room_type: "message" | "poll";
+  duration: number;
+  create_date: string;
+  expire_date: string;
+  poll_options?: PollOptionType[];
+  messages?: MessageType[];
+}

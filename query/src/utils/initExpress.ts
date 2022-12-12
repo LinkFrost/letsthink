@@ -28,8 +28,11 @@ export const auth = () => {
 };
 
 export default (port: number) => {
-  const app = express();
+  if (!process.env.ORIGIN) {
+    throw new Error("missing ORIGIN environment variable");
+  }
 
+  const app = express();
   app.use(express.json());
   app.use(
     cors({
@@ -39,10 +42,11 @@ export default (port: number) => {
       exposedHeaders: ["Authorization"],
     })
   );
+  // app.use(auth());
 
   app.listen(port, () => {
     console.log(`Query service listening on port ${port}`);
   });
 
-  return app;
+  return { app };
 };

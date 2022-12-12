@@ -10,7 +10,6 @@ const { eventBusChannel } = await initRabbit("vote", ["PollCreated", "MessageCre
 const { query } = initPostgres("vote-db");
 const { app } = initExpress(4012);
 
-
 type ConsumeMessage = PollCreated | MessageCreated | RoomCreated | RoomExpired;
 
 // Listen for incoming messages
@@ -27,8 +26,7 @@ eventBusChannel.consume("vote", async (message) => {
     switch (key) {
       case "PollCreated":
         data.poll_options.forEach(async (curr) => {
-
-          queryStr = "INSERT INTO messages (id) VALUES ($1)";
+          queryStr = "INSERT INTO poll_options (id) VALUES ($1)";
           queryValues = [curr.id];
           await query(queryStr, queryValues);
         });

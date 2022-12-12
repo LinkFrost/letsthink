@@ -4,7 +4,6 @@ import initExpress from "./utils/initExpress.js";
 import { auth } from "./utils/initExpress.js";
 
 import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, PollCreated, RoomVisualized, MessageCreated } from "./types/events.js";
-import { ObjectId } from "mongodb";
 
 const { eventBusChannel } = await initRabbit("query", [
   "RoomCreated",
@@ -18,28 +17,9 @@ const { eventBusChannel } = await initRabbit("query", [
 ]);
 
 const { mongoCollection } = await initMongo();
-
-const app = initExpress(4011);
+const { app } = initExpress(4011);
 
 type Event = RoomCreated | PollCreated | PollVoted | MessageVoted | MessageModerated | RoomVisualized | RoomExpired | MessageCreated;
-
-// {
-//   id: room_id,
-//   user_id: "fa74787c-352a-4956-8ef2-06513c651ecd",
-//   title: "My Room",
-//   about: "Just doing a quick little test poll",
-//   duration: 5,
-//   room_type: "poll",
-//   expired: false,
-//   poll_options: [
-//     {
-//       id: "05810ea1-2949-400c-b9a3-dc3667079ab2",
-//       title: "Option A",
-//       position: 1,
-//       votes: 3,
-//       room_id: "1678f74b-74d8-410c-8c91-4a029fad721f",
-//     },
-//   ],
 
 // Listen for incoming messages
 eventBusChannel?.consume("query", async (message) => {
@@ -51,7 +31,6 @@ eventBusChannel?.consume("query", async (message) => {
     switch (key) {
       case "RoomCreated": {
         // RoomData insert room, add expired=false
-        // const { id, user_id, title, about, duration, create_date, room_type } = data;
         const roomData = { ...data, expired: false };
         const related = roomData.room_type === "message" ? { messages: [] } : { poll_options: [] };
 
@@ -94,17 +73,33 @@ eventBusChannel?.consume("query", async (message) => {
   }
 });
 
-const fetchData = async () => {
-  const findResult = (await mongoCollection.find().toArray()) as any[];
+const fetchRoom = async (id: string) => {
+  const room = await mongoCollection.findOne({ id: id });
+  console.log(room);
 
-  return findResult[0];
+  return room;
 };
 
-app.get("/query", async (req, res) => {
-  res.send(await fetchData());
+const fetchRoomsByUser = async (id: string) => {
+  const room = await mongoCollection.findOne({ id: id });
+
+  return room;
+};
+
+app.get("/query/:room_id", async (req, res) => {
+  try {
+    const { room_id } = req.params;
+    const room = await fetchRoom(room_id);
+
+    return res.status(200).send(room);
+  } catch (err) {
+    return res.status(500).send({ error: err });
+  }
 });
 
-app.get("/checkMongo", async (req, res) => {
-  const viz = await mongoCollection.find({}).toArray();
-  res.send(viz);
+app.get("/query/:user_id", async (req, res) => {
+  try {
+  } catch (err) {
+    res.status(500).send({ error: err });
+  }
 });
