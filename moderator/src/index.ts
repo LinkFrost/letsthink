@@ -2,6 +2,7 @@ import initRabbit from "./utils/init/initRabbit.js";
 import initExpress from "./utils/init/initExpress.js";
 import initMongo from "./utils/init/initMongo.js";
 import { moderate } from "./utils/moderate.js";
+import banned_json from "./utils/banned.json" assert { type: "json" };
 
 const queue = "moderator";
 
@@ -15,6 +16,10 @@ const [mongoAcceptedMessages, mongoRejectedMessages, mongoBannedWords] = await i
 ]);
 
 let BANNED_WORDS = (await mongoBannedWords.find().toArray()).map((word) => word.word);
+
+if (!BANNED_WORDS?.length) {
+  await mongoBannedWords.insertMany(banned_json.map((word) => ({ word })));
+}
 
 // helper functions
 // store moderated message in mongo
