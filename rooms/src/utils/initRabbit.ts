@@ -20,5 +20,5 @@ export default async (queue: string, eventKeys: EventKeys[]) => {
     eventBusChannel.bindQueue(queue, exchange, key);
   });
 
-  return eventBusChannel;
+  return { eventBusChannel };
 };
