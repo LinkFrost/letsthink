@@ -116,7 +116,7 @@ export default function Create() {
     if (roomRes.ok) {
       const room_id = roomResData.id;
 
-      if (type == "poll") {
+      if (type === "poll") {
         const poll = {
           room_id: room_id,
           poll_options: pollOptions.map((pollOption, index) => {
@@ -266,7 +266,7 @@ export default function Create() {
           <button
             disabled={createLoading}
             onClick={(e) => createRoom(e)}
-            className="w-30 ml-auto mt-5 flex justify-center rounded-xl bg-yellow-400 p-2 text-lg text-black hover:bg-yellow-200"
+            className="w-30 mt-5 flex justify-center rounded-xl bg-yellow-400 p-2 text-lg text-black hover:bg-yellow-200"
           >
             {createLoading ? <Spinner shade={900} size={6} /> : "Create"}
           </button>

@@ -70,7 +70,7 @@ app.post("/messages", async (req, res) => {
       return res.status(400).send({ error: `Room with id ${room_id} does not exist or is expired!` });
     }
 
-    const queryText = "INSERT INTO messages(roomId, content) VALUES($1, $2) RETURNING *";
+    const queryText = "INSERT INTO messages(room_id, content) VALUES($1, $2) RETURNING *";
     const queryValues = [room_id, content];
 
     // Create message in database and send it through the event bus
@@ -79,8 +79,8 @@ app.post("/messages", async (req, res) => {
     const event: MessageCreated = { key: "MessageCreated", data: result.rows[0] };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
-    res.send(`Sent event of type MessageCreated`);
+    res.status(200).json(result.rows[0]);
   } catch (err) {
-    res.status(500).send({ error: err });
+    res.status(500).json({ error: err });
   }
 });

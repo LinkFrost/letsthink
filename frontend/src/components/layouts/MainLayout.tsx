@@ -13,30 +13,30 @@ const Header = (props: { router: NextRouter }) => {
   const session = useContext(AuthContext);
 
   return (
-    <header className="flex items-center justify-between border-b-2 border-neutral-700 bg-black p-6 px-20 lg:px-52">
-      <Link href="/">
-        <div className="flex items-center justify-center gap-1">
-          <Image alt="logo" src="/favicon.ico" height="50" width="50"></Image>
-          <h1 className="text-2xl font-bold text-yellow-500">letsthink</h1>
-        </div>
-      </Link>
-      {!session.isAuth ? (
-        <Link className="text-lg text-white hover:underline" href="login">
-          Login
+    <header className="border-b-2 border-neutral-700 bg-black p-2 px-4">
+      <div className="mx-auto flex max-w-screen-lg items-center justify-between">
+        <Link href="/">
+          <div className="flex items-center justify-center gap-1">
+            <Image alt="logo" src="/favicon.ico" height="50" width="50" />
+            <span className="text-2xl font-bold text-yellow-500">letsthink</span>
+          </div>
         </Link>
-      ) : (
-        <div className="flex gap-12">
-          <Link className="text-lg text-white hover:underline" href="rooms/me">
-            My Rooms
+        {!session.isAuth ? (
+          <Link className="text-white hover:underline" href="login">
+            Login
           </Link>
-          <div className="">
-            <button className="flex items-center justify-center gap-3 text-lg text-white hover:underline " onClick={logout}>
+        ) : (
+          <div className="flex gap-4">
+            <Link className="text-white hover:underline" href="/rooms/me">
+              My Rooms
+            </Link>
+            <button className="flex items-center justify-center gap-2 text-white hover:underline " onClick={logout}>
               Logout
               <LogoutSVG />
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </header>
   );
 };
@@ -49,7 +49,7 @@ type FooterLinkPropTypes = {
 
 const FooterLink = ({ href, children, target = "" }: FooterLinkPropTypes) => {
   return (
-    <li className="">
+    <li className="py-2">
       <Link target={target} href={href} className="text-sm transition duration-75 ease-out hover:text-neutral-50 hover:underline">
         {children}
       </Link>
@@ -61,20 +61,19 @@ const Footer = () => {
   return (
     <footer className="mt-auto bg-black pb-2">
       <hr className="border-[1px] border-neutral-700"></hr>
-      <div className="item mx-auto grid max-w-screen-lg grid-cols-2 justify-center gap-2 py-1 px-6 text-neutral-500 sm:grid-cols-4">
+      <div className="item mx-auto grid max-w-screen-md grid-cols-3 justify-center gap-2 py-1 px-6 text-neutral-500 sm:grid-cols-3">
         <div>
-          <h2 className="my-3 text-lg text-neutral-50">Links</h2>
+          <h2 className="my-3 text-lg text-neutral-50">Navigation</h2>
           <ul>
             <FooterLink href="/">Home</FooterLink>
-            <FooterLink href="">My Rooms</FooterLink>
+            <FooterLink href="/rooms/me">My Rooms</FooterLink>
+            <FooterLink href="/rooms/create">Create Room</FooterLink>
           </ul>
         </div>
         <div>
           <h2 className="my-3 text-lg text-neutral-50">Project</h2>
           <ul>
-            <FooterLink target="_blank" href="">
-              About
-            </FooterLink>
+            <FooterLink href="/about">About</FooterLink>
             <FooterLink target="_blank" href="">
               GitHub
             </FooterLink>
@@ -109,7 +108,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     <div className={`flex min-h-screen flex-col justify-start bg-neutral-900 ${inter.className}`}>
       <Header router={router} />
       {children}
-      {/* <Footer /> */}
+      <Footer />
     </div>
   );
 };
