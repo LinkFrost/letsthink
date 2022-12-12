@@ -89,7 +89,7 @@ app.post("/messages/:id", async (req, res) => {
     }
 
     // send event to rabbitMQ
-    const event: MessageVoted = { key: "MessageVoted", data: result.rows[0] };
+    const event: MessageVoted = { key: "MessageVoted", data: { ...result.rows[0], room_id: room_id } };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
     //
@@ -130,7 +130,7 @@ app.post("/polls/:id", async (req, res) => {
     }
 
     // send event to rabbitMQ
-    const event: PollVoted = { key: "PollVoted", data: result.rows[0] };
+    const event: PollVoted = { key: "PollVoted", data: { ...result.rows[0], room_id: room_id } };
     // const event = { key: "PollVoted2", data: result.rows[0] };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 

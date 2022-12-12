@@ -25,3 +25,11 @@ export interface PollOptionColor {
   border: string;
   inactive: string;
 }
+
+export interface MessageType {
+  id: string;
+  content: string;
+  create_date: string;
+  room_id: string;
+  votes: number;
+}

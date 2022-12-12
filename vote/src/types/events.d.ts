@@ -85,6 +85,7 @@ export interface PollVoted extends Event {
   data: {
     id: string;
     votes: string;
+    room_id: string;
   };
 }
 

@@ -7,4 +7,4 @@ CREATE TABLE poll_options (
   title text,
   position integer,
   room_id UUID references rooms(id)
-);
+)

@@ -28,7 +28,7 @@ export default function Home() {
           </div>
 
           {session.isAuth && (
-            <Link className="ml-auto mt-5 flex w-48 justify-center rounded-xl bg-yellow-400 p-2 text-2xl hover:bg-yellow-200" href="/rooms/create">
+            <Link className="mt-5 flex w-full  justify-center rounded-xl bg-yellow-400 p-2 text-2xl hover:bg-yellow-200" href="/rooms/create">
               Create Room
             </Link>
           )}
