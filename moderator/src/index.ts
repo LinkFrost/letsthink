@@ -26,23 +26,6 @@ const storeModeratedMessage = async (message: string, rejected: boolean, invalid
   }
 };
 
-// Listen for incoming messages
-eventBusChannel.consume(queue, (message) => {
-  if (!message) return;
-
-  const { key, data } = JSON.parse(message.content.toString());
-
-  console.log(`Received event of type ${key}`);
-
-  switch (key) {
-    default:
-    // Insert logic for various events here depending on the type and data
-    // Case for each event type
-  }
-
-  eventBusChannel.ack(message);
-});
-
 // basic express route
 server.get("/", (req, res) => {
   res.send("Moderator service");
@@ -52,9 +35,9 @@ server.get("/", (req, res) => {
 server.post("/moderate", async (req, res) => {
   const { message } = req.body;
 
-  const { rejected, invalidWords } = moderate(BANNED_WORDS, message);
+  const { wasRejected, invalidWords } = moderate(BANNED_WORDS, message);
 
-  await storeModeratedMessage(message, rejected, invalidWords);
+  await storeModeratedMessage(message, wasRejected, invalidWords);
 
-  res.send({ status: rejected ? "rejected" : "accepted", invalidWords });
+  res.send({ status: wasRejected ? "rejected" : "accepted", invalidWords });
 });

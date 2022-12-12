@@ -4,7 +4,7 @@ const moderate = (bannedWords: string[], message: string) => {
   const bannedWordsInMessage = messageWords.filter((w) => bannedWords.includes(w));
 
   return {
-    rejected: bannedWordsInMessage.length > 0,
+    wasRejected: bannedWordsInMessage.length > 0,
     invalidWords: bannedWordsInMessage,
   };
 };
