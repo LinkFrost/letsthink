@@ -1,7 +1,9 @@
 import json
 import boto3
 import os
+import math
 import matplotlib.pyplot as plt
+import numpy as np
 
 from fastapi import FastAPI, HTTPException
 
@@ -104,10 +106,18 @@ def messageViz(roomData):
     plt.bar(courses, values, color='blue',
             width=0.4)
 
+    # Setting the interval of ticks of x-axis.
+    listOf_Xticks = np.arange(0, min(3, len(messages)), 1)
+    plt.xticks(listOf_Xticks)
+
+    # Setting the interval of ticks of y-axis.
+    listOf_Yticks = np.arange(0, math.ceil(max(data.values()) * 1.1) + 1, 1)
+    plt.yticks(listOf_Yticks)
+
     plt.xlabel("Messages")
     plt.ylabel("Vote Count")
     plt.title("Top Messages")
-    filePath = roomData['title'] + '.jpg'
+    filePath = roomData['title'] + roomData['id'] + '.jpg'
     plt.savefig(filePath)
 
     print("VISUALIZED MESSAGE")
@@ -116,8 +126,51 @@ def messageViz(roomData):
 
 
 def pollViz(roomData):
-    polls = roomData.polls
+    print("POLL DATA")
+    print(roomData)
+    pollOptions = roomData['poll_options']
+    # creating the dataset
+
+    if not pollOptions:
+        return
+
+    data = {pollOption['title']:  pollOption['votes']
+            for pollOption in pollOptions}
+
+    largestVal = max([pollOption['votes'] for pollOption in pollOptions])
+
+    courses = list(data.keys())
+    values = list(data.values())
+
+    fig = plt.figure(figsize=(10, 5))
+
+    # creating the bar plot
+    plt.bar(courses, values, color='blue',
+            width=0.4)
+
+    # Setting the interval of ticks of x-axis.
+    listOf_Xticks = np.arange(0, len(pollOptions), 1)
+    plt.xticks(listOf_Xticks)
+
+    print("CEILSS")
+
+    print(largestVal)
+    print(math.ceil(1.1))
+    print(math.ceil(largestVal * 1.1))
+
+    # Setting the interval of ticks of y-axis.
+    listOf_Yticks = np.arange(0, math.ceil(largestVal * 1.1) + 1, 1)
+    plt.yticks(listOf_Yticks)
+
+    plt.xlabel("Options")
+    plt.ylabel("Vote Count")
+    plt.title(f"Poll Results for {roomData['title']}")
+    filePath = roomData['title'] + roomData['id'] + '.jpg'
+    plt.savefig(filePath)
+
     print("VISUALIZED POLLS")
+
+    return filePath
 
 
 def condense(str):
