@@ -345,6 +345,8 @@ services:
     restart: always
     environment:
       - POSTGRES_PASSWORD=${VOTE_PG_PASSWORD}
+    ports:
+      - 5439:5432
     volumes:
       - "./vote/src/utils/init.sql:/docker-entrypoint-initdb.d/init.sql"
     healthcheck:

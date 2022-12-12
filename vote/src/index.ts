@@ -5,9 +5,11 @@ import z from "zod";
 import type { PollVoted, MessageVoted, RoomCreated, RoomExpired, MessageCreated, PollCreated } from "./types/events.js";
 
 // initialize rabbitmq, postgres, and express
+
 const { eventBusChannel } = await initRabbit("vote", ["PollCreated", "MessageCreated", "RoomCreated", "RoomExpired"]);
 const { query } = initPostgres("vote-db");
 const { app } = initExpress(4012);
+
 
 type ConsumeMessage = PollCreated | MessageCreated | RoomCreated | RoomExpired;
 
@@ -25,6 +27,7 @@ eventBusChannel.consume("vote", async (message) => {
     switch (key) {
       case "PollCreated":
         data.poll_options.forEach(async (curr) => {
+
           queryStr = "INSERT INTO messages (id) VALUES ($1)";
           queryValues = [curr.id];
           await query(queryStr, queryValues);
@@ -33,18 +36,23 @@ eventBusChannel.consume("vote", async (message) => {
       case "MessageCreated":
         queryStr = "INSERT INTO messages (id) VALUES ($1)";
         queryValues = [data.id];
+
         await query(queryStr, queryValues);
         break;
       case "RoomCreated":
         queryStr = "INSERT INTO rooms (id) VALUES ($1)";
         queryValues = [data.id];
+
         await query(queryStr, queryValues);
         break;
       case "RoomExpired":
         queryStr = "DELETE FROM rooms WHERE id=$1";
         queryValues = [data.id];
+
         await query(queryStr, queryValues);
         break;
+      default:
+        console.log(data);
     }
   } catch (err) {
     eventBusChannel.nack(message);
@@ -69,6 +77,7 @@ app.post("/messages", async (req, res) => {
     const { message_id, room_id }: { message_id: string; room_id: string } = req.body;
 
     // check if room is expired (if it exists in rooms)
+
     let queryStr = "SELECT * FROM rooms WHERE id=$1";
     let queryValues = [room_id];
     const activeRooms = await query<{ id: string }>(queryStr, queryValues);
@@ -81,6 +90,7 @@ app.post("/messages", async (req, res) => {
     // room is not expired
     queryStr = "UPDATE messages SET votes=votes+1 WHERE id=$1 RETURNING *";
     queryValues = [message_id];
+
     const updatedMessage = await query<Omit<MessageVoted["data"], "room_id">>(queryStr, queryValues);
 
     if (updatedMessage.rows.length === 0) {
@@ -90,6 +100,7 @@ app.post("/messages", async (req, res) => {
     const eventData = { room_id, ...updatedMessage.rows[0] };
 
     // send event to rabbitMQ
+
     const event: MessageVoted = { key: "MessageVoted", data: eventData };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
@@ -115,6 +126,7 @@ app.post("/polls", async (req, res) => {
     const { option_id, room_id }: { option_id: string; room_id: string } = req.body;
 
     // check if room is expired (if it exists in rooms)
+
     let queryStr = "SELECT * FROM rooms WHERE id=$1";
     let queryValues = [room_id];
     const activeRooms = await query<{ id: string }>(queryStr, queryValues);
@@ -127,6 +139,7 @@ app.post("/polls", async (req, res) => {
     // room is not expired
     queryStr = "UPDATE poll_options SET votes=votes+1 WHERE id=$1 RETURNING *";
     queryValues = [option_id];
+
     const updatedPollOption = await query<Omit<PollVoted["data"], "room_id">>(queryStr, queryValues);
 
     if (updatedPollOption.rows.length === 0) {
@@ -136,6 +149,7 @@ app.post("/polls", async (req, res) => {
     const eventData = { room_id, ...updatedPollOption.rows[0] };
 
     // send event to rabbitMQ
+
     const event: PollVoted = { key: "PollVoted", data: eventData };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 

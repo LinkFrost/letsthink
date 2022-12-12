@@ -88,7 +88,7 @@ app.post("/polls", async (req, res) => {
     const event: PollCreated = { key: "PollCreated", data: { room_id: room_id, poll_options: createdOptions } };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
-    res.send(`Sent event of type PollCreated`);
+    res.status(200).send({ success: "Created poll" });
   } catch (err) {
     res.status(500).send({ error: err });
   }
