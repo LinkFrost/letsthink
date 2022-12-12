@@ -14,11 +14,8 @@ export type EventKeys =
   | "UserCreated"
   | "HTTPRequest";
 
-interface Event {
-  key: EventKeys;
-}
-
 // ROOM EVENTS
+
 export interface RoomCreated extends Event {
   key: "RoomCreated";
   data: {
@@ -26,17 +23,29 @@ export interface RoomCreated extends Event {
     user_id: string;
     title: string;
     about: string;
-    create_date: string;
-    duration: number;
     room_type: "message" | "poll";
+    duration: number;
+    create_date: string;
+    expire_date: string;
   };
 }
 
 export interface RoomExpired extends Event {
   key: "RoomExpired";
   data: {
+    id: string;
+  };
+}
+
+export interface RoomVisualized extends Event {
+  key: "RoomVisualized";
+  data: {
+    id: string;
     room_id: string;
-    room_type: "message" | "poll";
+    title: string;
+    user_email: string;
+    username: string;
+    imageUrl: string;
   };
 }
 
@@ -57,6 +66,7 @@ export interface MessageVoted extends Event {
   data: {
     id: string;
     votes: number;
+    room_id: string;
   };
 }
 
@@ -76,6 +86,7 @@ export interface PollVoted extends Event {
   data: {
     id: string;
     votes: string;
+    room_id: string;
   };
 }
 
@@ -112,17 +123,5 @@ export interface HTTPRequest extends Event {
   key: "HTTPRequest";
   data: {
     status: number;
-  };
-}
-
-export interface RoomVisualized extends Event {
-  key: "RoomVisualized";
-  data: {
-    id: string;
-    room_id: string;
-    title: string;
-    user_email: string;
-    username: string;
-    imageUrl: string;
   };
 }

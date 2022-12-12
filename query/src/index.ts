@@ -52,7 +52,7 @@ eventBusChannel?.consume("query", async (message) => {
       case "RoomCreated": {
         // RoomData insert room, add expired=false
         // const { id, user_id, title, about, duration, create_date, room_type } = data;
-        const roomData = { ...data };
+        const roomData = { ...data, expired: false };
         if (!["message", "poll"].includes(roomData.room_type)) return;
         const related = roomData.room_type === "message" ? { messages: [] } : { poll_options: [] };
 
@@ -67,22 +67,26 @@ eventBusChannel?.consume("query", async (message) => {
       case "MessageVoted": {
         // get back message id and room id, update message in room object with votes
         const messageData = { ...data };
-        await mongoCollection.updateOne({ id: messageData.room_id }, { $set: { expired: true } });
+        await mongoCollection.updateOne({ id: messageData.room_id, "messages.id": messageData.id }, { $set: { "messages.$.votes": messageData.votes } });
         break;
       }
       case "PollVoted": {
         // get back polls id and room id, update polls in room object with votes
         const pollData = { ...data };
+        await mongoCollection.updateOne({ id: pollData.room_id, "poll_options.id": pollData.id }, { $set: { "poll_options.$.votes": pollData.votes } });
         break;
       }
       case "PollCreated": {
         // get array of poll options and insert each into correct room
         const pollData = { ...data };
+        pollData.poll_options = pollData.poll_options.map((cur) => ({ ...cur, votes: 0 }));
+        await mongoCollection.updateOne({ id: pollData.room_id }, { $set: { poll_options: pollData.poll_options } });
         break;
       }
       case "MessageCreated": {
         // get message and add to room
-        const MessageCreated = { ...data };
+        const messageData = { ...data, votes: 0 };
+        await mongoCollection.updateOne({ id: messageData.room_id }, { $push: { messages: messageData } });
         break;
       }
     }
