@@ -54,32 +54,30 @@ def read_root():
 
 
 @app.post("/visual")
-def generateVisual(RoomData: dict):
-    print("ROOM DATA")
-    print(RoomData)
-    roomId = RoomData["id"]
-    roomData = RoomData["roomData"]
+def generateVisual(reqData: dict):
+    print("VISUALIZING ROOM")
+    roomData = reqData["roomData"]
+    roomType = roomData["room_type"]
+    filePath = ''
 
-    plt.plot([0, 1, 2, 3, 4], [0, 2, 4, 8, 16])
-    plt.xlabel('Months')
-    plt.ylabel('Movies watched')
-    plt.savefig('test.jpg')
+    if roomType == "message":
+        filePath = messageViz(roomData)
+    elif roomType == "poll":
+        filePath = pollViz(roomData)
+    else:
+        raise HTTPException(status_code=400, detail="invalid json payload")
 
-    img_path = "test.jpg"
-    img_name = "test.jpg"
-    img_type = 'jpg'
-
-    if not img_path or not img_name or not img_type:
+    if not filePath:
         raise HTTPException(status_code=400, detail="invalid json payload")
 
     try:
         image_url = upload_file(
-            file_path=img_path,
-            file_key=img_name,
-            file_extension=img_type
+            file_path=filePath,
+            file_key=filePath,
+            file_extension='jpg'
         )
 
-        os.remove(img_path)
+        os.remove(filePath)
 
         return {
             "imageUrl": image_url
@@ -88,6 +86,46 @@ def generateVisual(RoomData: dict):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail="issue processing image")
+
+
+def messageViz(roomData):
+    messages = roomData['messages']
+    res = sorted(messages, key='votes', reverse=True)[0: min(3, len(messages))]
+
+    # creating the dataset
+    data = {data[m['content']]:  m['votes'] for m in res}
+
+    courses = list(data.keys())
+    values = list(data.values())
+
+    fig = plt.figure(figsize=(10, 5))
+
+    # creating the bar plot
+    plt.bar(courses, values, color='blue',
+            width=0.4)
+
+    plt.xlabel("Messages")
+    plt.ylabel("Vote Count")
+    plt.title("Top Messages")
+    filePath = roomData['title'] + '.jpg'
+    plt.savefig(filePath)
+
+    print("VISUALIZED MESSAGE")
+
+    return filePath
+
+
+def pollViz(roomData):
+    polls = roomData.polls
+    print("VISUALIZED POLLS")
+
+
+def condense(str):
+
+    if len(str) > 10:
+        str = str[:10] + '...'
+
+    return str
 
 
 @ app.on_event("startup")

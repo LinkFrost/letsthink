@@ -39,6 +39,12 @@ const app = initExpress(4013);
 const getRoomData = async (room_id: string) => {
   try {
     const response = await fetch(`http://query:4011/query/${room_id}`);
+
+    if (!response.ok) {
+      console.log("Room Data Invalid");
+      return null;
+    }
+
     return await response.json();
   } catch (e) {
     console.log(e);
@@ -61,10 +67,8 @@ eventBusChannel.consume(queue, async (message) => {
 
         // Get Room Data by Id
         const resData: RoomData = await getRoomData(id);
-        console.log("RESDATA", resData);
 
-        if (!resData.id) {
-          console.log("Room Data Invalid");
+        if (!resData?.id) {
           return;
         }
 
@@ -77,15 +81,20 @@ eventBusChannel.consume(queue, async (message) => {
           body: JSON.stringify({ id: id, roomData: resData }),
         });
 
+        if (!response.ok) {
+          console.log("PYTHON SERVER BROKEN");
+          return;
+        }
+
         // Get Image URL
         const { imageUrl } = await response.json();
 
         // Update DB
         await mongoCollection.updateOne(
-          { email: "gsdfg@gmail.com" },
+          { email: "jbisceglia@umass.edu" },
           {
             $push: {
-              visualizations: { imageUrl: "url", room_id: "id" },
+              visualizations: { imageUrl: imageUrl, room_id: id },
             },
           },
           { upsert: true }
@@ -94,7 +103,7 @@ eventBusChannel.consume(queue, async (message) => {
         // Publish Visualization
         const event: RoomVisualized = {
           key: "RoomVisualized",
-          data: { id: id, room_id: "string", title: "string", user_email: "string", username: "string", imageUrl: imageUrl },
+          data: { id: id, room_id: id, title: resData.title, user_email: "jbisceglia@umass.edu", username: "jbisceglia", imageUrl: imageUrl },
         };
         eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
@@ -102,6 +111,7 @@ eventBusChannel.consume(queue, async (message) => {
       default:
     }
   } catch (err) {
+    console.log("CRASHED ON NACK");
     eventBusChannel.nack(message);
   }
 

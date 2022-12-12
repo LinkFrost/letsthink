@@ -264,42 +264,42 @@ services:
     ports:
       - 27017:27017
 
-  # visualizer:
-  #   container_name: letsthink-visualizer
-  #   build: "./visualizer"
-  #   ports:
-  #     - 4013:4013
-  #   volumes:
-  #     - "./visualizer/src:/usr/app/src"
-  #   depends_on:
-  #     event-bus:
-  #       condition: service_healthy
-  #   environment:
-  #     - SH_MONGO_USER=${SH_MONGO_USER}
-  #     - SH_MONGO_PASSWORD=${SH_MONGO_PASSWORD}
+  visualizer:
+    container_name: letsthink-visualizer
+    build: "./visualizer"
+    ports:
+      - 4013:4013
+    volumes:
+      - "./visualizer/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
+    environment:
+      - SH_MONGO_USER=${SH_MONGO_USER}
+      - SH_MONGO_PASSWORD=${SH_MONGO_PASSWORD}
 
-  # visualizer-db:
-  #   container_name: letsthink-visualizer-db
-  #   image: mongo:latest
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: root
-  #     MONGO_INITDB_ROOT_PASSWORD: rootpassword
-  #   ports:
-  #     - 27020:27017
+  visualizer-db:
+    container_name: letsthink-visualizer-db
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - 27020:27017
 
-  # visual-generator:
-  #   container_name: letsthink-visual-generator
-  #   build: "./visual-generator"
-  #   ports:
-  #     - 4010:4010
-  #   volumes:
-  #     - "./visual-generator/src:/usr/app/src"
-  #   depends_on:
-  #     event-bus:
-  #       condition: service_healthy
-  #   environment:
-  #     - AWS_S3_ACCESS_KEY_ID=${AWS_S3_ACCESS_KEY_ID}
-  #     - AWS_S3_SECRET_ACCESS_KEY=${AWS_S3_SECRET_ACCESS_KEY}
+  visual-generator:
+    container_name: letsthink-visual-generator
+    build: "./visual-generator"
+    ports:
+      - 4010:4010
+    volumes:
+      - "./visual-generator/src:/usr/app/src"
+    depends_on:
+      event-bus:
+        condition: service_healthy
+    environment:
+      - AWS_S3_ACCESS_KEY_ID=${AWS_S3_ACCESS_KEY_ID}
+      - AWS_S3_SECRET_ACCESS_KEY=${AWS_S3_SECRET_ACCESS_KEY}
 
   query:
     container_name: letsthink-query
