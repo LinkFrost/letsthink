@@ -3,143 +3,75 @@ import { useRouter } from "next/router";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../../utils/auth/auth";
 import Spinner from "../../components/other/Spinner";
-import { PollOptionType, PollOptionColor, SubmissionStatus, MessageType } from "../../utils/types/types";
-import { VoteService } from "../../utils/services";
+import { PollOptionType, PollOptionColor, SubmissionStatus, MessageType, RoomDataType } from "../../utils/types/types";
+import { QueryService, VoteService } from "../../utils/services";
 import Checkmark from "../../components/other/Checkmark";
 import { pollOptionColors } from "../../utils/pollOptionColors";
 
 export default function RoomPage() {
   const session = useContext(AuthContext);
   const router = useRouter();
-  const room_id = router.query.slug;
+  const room_id = router.query.room_id as string;
 
-  const [roomData, setRoomData] = useState<any>({});
+  const [roomData, setRoomData] = useState<RoomDataType>();
   const [messages, setMessages] = useState<any>([]);
-  const [pollOptions, setPollOptions] = useState<any>([]);
+  const [pollOptions, setPollOptions] = useState<PollOptionType[]>([]);
   const [roomLoading, setRoomLoading] = useState(false);
   const [pollVote, setPollVote] = useState<string>("");
   const [pollVoteStatus, pollVoteStatusStatus] = useState<SubmissionStatus>({ color: "", message: "", status: "" });
 
   useEffect(() => {
-    setRoomLoading(true);
-    // const room = {
-    //   id: room_id,
-    //   user_id: "fa74787c-352a-4956-8ef2-06513c651ecd",
-    //   title: "My Room",
-    //   about: "Just doing a quick little test poll",
-    //   duration: 5,
-    //   room_type: "poll",
-    //   expired: false,
-    //   poll_options: [
-    //     {
-    //       id: "05810ea1-2949-400c-b9a3-dc3667079ab2",
-    //       title: "Option A",
-    //       position: 1,
-    //       votes: 3,
-    //       room_id: "1678f74b-74d8-410c-8c91-4a029fad721f",
-    //     },
-    //     {
-    //       id: "05810ea1-2949-400c-b9a3-dc3667079ab3",
-    //       title: "Option B",
-    //       position: 2,
-    //       votes: 7,
-    //       room_id: "1678f74b-74d8-410c-8c91-4a029fad721f",
-    //     },
-    //     {
-    //       id: "05810ea1-2949-400c-b9a3-dc3667079ab4",
-    //       title: "Option C",
-    //       position: 3,
-    //       votes: 17,
-    //       room_id: "1678f74b-74d8-410c-8c91-4a029fad721f",
-    //     },
-    //     {
-    //       id: "05810ea1-2949-400c-b9a3-dc3667079ab5",
-    //       title: "Option D",
-    //       position: 4,
-    //       votes: 0,
-    //       room_id: "1678f74b-74d8-410c-8c91-4a029fad721f",
-    //     },
-    //     {
-    //       id: "05810ea1-2949-400c-b9a3-dc3667079ab6",
-    //       title: "Option E",
-    //       position: 5,
-    //       votes: 9,
-    //       room_id: "1678f74b-74d8-410c-8c91-4a029fad721f",
-    //     },
-    //   ],
-    // };
+    const fetchRoom = async (id: string) => {
+      if (id) {
+        const res = await fetch(`${QueryService}/query/${id}`, {
+          method: "GET",
+          credentials: "include",
+        });
 
-    const room = {
-      id: room_id,
-      user_id: "fa74787c-352a-4956-8ef2-06513c651ecd",
-      title: "My Room",
-      about: "Just doing a quick little test poll",
-      duration: 5,
-      room_type: "message",
-      expired: false,
-      messages: [
-        {
-          id: "86a34c3e-3391-4e67-9025-0834de6a7a5f",
-          content: "This is my comment about the room",
-          room_id: room_id,
-          votes: 6,
-          create_date: "15",
-        },
-        {
-          id: "86a34c3e-3391-4e67-9025-0834de6a7a5a",
-          content: "This is also my comment about the room",
-          room_id: room_id,
-          votes: 3,
-          create_date: "51",
-        },
-        {
-          id: "86a34c3e-3391-4e67-9025-0834de6a7a5i",
-          content: "lol",
-          room_id: room_id,
-          votes: 7,
-          create_date: "26",
-        },
-        {
-          id: "86a34c3e-3391-4e67-9025-0834de6a7a5d",
-          content: "This is my comment about the room This is my comment about the room This is my comment about the room This is my comment about the room ",
-          room_id: room_id,
-          votes: 2,
-          create_date: "11",
-        },
-      ],
+        const data = (await res.json()) as RoomDataType;
+
+        if (res.ok) {
+          setRoomData(data);
+
+          if (data.poll_options) {
+            setPollOptions(data.poll_options.sort((a, b) => a.position - b.position));
+
+            if (window.sessionStorage.getItem(data.id)) {
+              setPollVote(window.sessionStorage.getItem(data.id) as string);
+            }
+          }
+
+          if (data.messages) {
+            setMessages(data.messages.sort((a, b) => parseInt(a.create_date) - parseInt(b.create_date)));
+
+            // if (window.sessionStorage.getItem(roomData.id)) {
+            //   setPollVote(window.sessionStorage.getItem(roomData.id) as string);
+            // }
+          }
+        }
+      }
     };
-    setRoomData(room);
-    // const d = new Date("2022-12-11 12:04:05.322899+00");
-    // console.log(d.g - Date.now());
 
-    // if (room.room_type == "poll") {
-    //   setPollOptions(room.poll_options.sort((a, b) => a.position - b.position));
-
-    //   if (window.sessionStorage.getItem(roomData.id)) {
-    //     setPollVote(window.sessionStorage.getItem(roomData.id) as string);
-    //   }
-    // }
-
-    if (room.room_type == "message") {
-      setMessages(room.messages.sort((a, b) => parseInt(a.create_date) - parseInt(b.create_date)));
-
-      // if (window.sessionStorage.getItem(roomData.id)) {
-      //   setPollVote(window.sessionStorage.getItem(roomData.id) as string);
-      // }
-    }
-
+    setRoomLoading(true);
+    fetchRoom(room_id);
     setRoomLoading(false);
-  }, [room_id, roomData.id]);
+
+    setInterval(() => {
+      if (document.hasFocus()) {
+        fetchRoom(room_id);
+      }
+    }, 2000);
+  }, [room_id]);
 
   const votePoll = async (id: string) => {
-    const res = await fetch(`${VoteService}/polls}`, {
+    const res = await fetch(`${VoteService}/polls`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        id: id,
-        room_id: roomData.id,
+        option_id: id,
+        room_id: room_id,
       }),
     });
 
@@ -158,7 +90,7 @@ export default function RoomPage() {
       setPollOptions(currPollOptions);
       setPollVote(id);
 
-      window.sessionStorage.setItem(roomData.id, id);
+      window.sessionStorage.setItem(room_id, id);
     }
   };
 
@@ -206,12 +138,12 @@ export default function RoomPage() {
   return (
     <div className="p-8">
       <Head>
-        <title>{roomData.title} - letsthink</title>
+        <title>letsthink</title>
         <meta name="description" content="Generated by create next app" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex flex-col items-center justify-center">
-        {roomLoading ? (
+        {!roomData ? (
           <Spinner shade={900} size={6} />
         ) : (
           <div className="flex w-full max-w-2xl flex-col items-center justify-center text-white">

@@ -30,6 +30,8 @@ const auth = () => {
 export default (port: number) => {
   const app = express();
 
+  console.log(process.env.ORIGIN);
+
   app.use(express.json());
   app.use(
     cors({
