@@ -9,7 +9,7 @@ import Checkmark from "../../components/other/Checkmark";
 import { pollOptionColors } from "../../utils/pollOptionColors";
 import { HeartOutline, FilledHeart } from "../../components/other/Hearts";
 
-function relativeTimeSince(date: string) {
+export function relativeTimeSince(date: string) {
   const formatter = new Intl.RelativeTimeFormat("en");
   const diff = new Date().valueOf() - new Date(date).valueOf();
 
