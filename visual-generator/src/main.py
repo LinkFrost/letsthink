@@ -92,10 +92,10 @@ def generateVisual(reqData: dict):
 
 def messageViz(roomData):
     messages = roomData['messages']
-    res = sorted(messages, key='votes', reverse=True)[0: min(3, len(messages))]
+    res = sorted(messages, key=lambda x: x['votes'], reverse=True)[0:3]
 
     # creating the dataset
-    data = {data[m['content']]:  m['votes'] for m in res}
+    data = {m['content']:  m['votes'] for m in res}
 
     courses = list(data.keys())
     values = list(data.values())
@@ -126,6 +126,7 @@ def messageViz(roomData):
 
 
 def pollViz(roomData):
+
     pollOptions = roomData['poll_options']
     # creating the dataset
 

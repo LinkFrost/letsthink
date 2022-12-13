@@ -14,7 +14,7 @@ if (!MONGO_USER || !MONGO_PASSWORD) {
 export default async function () {
   const client = new MongoClient(MONGO_URI);
   const database = client.db("query");
-  const mongoCollection = database.collection("query");
-
-  return { mongoCollection };
+  const mongoCollectionRoom = database.collection("room");
+  const mongoCollectionUsers = database.collection("users");
+  return { mongoCollectionRoom, mongoCollectionUsers };
 }
