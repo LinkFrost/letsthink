@@ -38,7 +38,7 @@ const app = initExpress(4013);
 
 const getRoomData = async (room_id: string) => {
   try {
-    const response = await fetch(`http://query:4011/query/${room_id}`);
+    const response = await fetch(`http://query:4011/query/rooms/${room_id}`);
 
     if (!response.ok) {
       console.log("Room Data Invalid");

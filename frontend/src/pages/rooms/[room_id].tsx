@@ -115,7 +115,7 @@ export default function RoomPage() {
     (async () => {
       const fetchRoom = async (id: string) => {
         if (id) {
-          const res = await fetch(`${QueryService}/query/${id}`, {
+          const res = await fetch(`${QueryService}/query/rooms/${id}`, {
             method: "GET",
             credentials: "include",
           });

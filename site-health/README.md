@@ -2,4 +2,8 @@
 
 **Github:** sid2033
 
-The site-health service stores data related to the various requests and events that happen during the use of the app. It stores information such as the total rooms created, total requests, etc. We use MongoDB to store, read, and update this information quickly. Whenever the service receives an event "RoomCreated" or "UserCreated", it will appropriately update the relevant data in the database. This service isn't directly used by any other service so it is usually accessed externally. It has a single endpoint which is used to retrieve the site-health data (GET).
+The site-health service stores data related to the various requests and events that happen during the use of the app. It stores information such as the total rooms created, total requests, etc. We use MongoDB to store, read, and update this information quickly. The data is stored as multiple documents containing data about a specific room.
+
+Whenever the service receives an event "RoomCreated" or "UserCreated", it will appropriately update the relevant data in the database. This service isn't directly used by any other service so it is usually accessed externally.
+
+It has a single endpoint which is used to retrieve the site-health data (GET).
