@@ -3,7 +3,19 @@ import { createContext, useEffect, useState } from "react";
 import { User } from "../types/types";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
-export const AuthContext = createContext({ token: "", isAuth: false, userData: {}, resetContext: () => {} });
+type Context = {
+  token: string;
+  isAuth: boolean;
+  userData: User | null;
+  loading: boolean;
+};
+
+export const AuthContext = createContext<Context>({
+  token: "",
+  isAuth: false,
+  userData: null,
+  loading: true,
+});
 
 const login = async (email: string, password: string) => {
   const res = await fetch(`${AuthService}/auth/login`, {
@@ -42,17 +54,13 @@ const logout = async () => {
 };
 
 const useSession = () => {
+  const [loading, setLoading] = useState<boolean>(true);
   const [token, setToken] = useState<string>("");
   const [isAuth, setIsAuth] = useState<boolean>(false);
-  const [user, setUser] = useState<User | {}>({});
-
-  const resetContext = () => {
-    setToken("");
-    setIsAuth(false);
-    setUser({});
-  };
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    setLoading(true);
     const refreshToken = async () => {
       const res = await fetch(`${AuthService}/auth/refresh/`, {
         method: "GET",
@@ -64,25 +72,27 @@ const useSession = () => {
       if (data.success) {
         const authToken = res.headers.get("Authorization");
 
-        if (authToken !== null) {
-          const tokenUserData = jwt.decode(authToken.split(" ")[1], { complete: true })?.payload as JwtPayload;
+        if (!authToken) return;
 
-          if (tokenUserData) {
-            const userData = {
-              id: tokenUserData.id,
-              email: tokenUserData.email,
-              username: tokenUserData.username,
-            };
+        let tokenUserData = jwt.decode(authToken.split(" ")[1], { complete: true })?.payload as JwtPayload;
 
-            setUser(userData);
-            setIsAuth(true);
-            setToken(authToken);
-          }
-        }
+        if (!tokenUserData) return;
+
+        const userData = {
+          id: tokenUserData.id,
+          email: tokenUserData.email,
+          username: tokenUserData.username,
+        };
+
+        setUser(userData);
+        setIsAuth(true);
+        setToken(authToken);
+        setLoading(false);
       } else {
         setToken("");
         setIsAuth(false);
-        setUser({});
+        setLoading(false);
+        setUser(null);
       }
     };
 
@@ -97,7 +107,7 @@ const useSession = () => {
     }
   }, [isAuth]);
 
-  return { token: token, isAuth: isAuth, userData: user, resetContext: resetContext };
+  return { token: token, isAuth: isAuth, userData: user, loading: loading };
 };
 
 export { useSession, login, logout };
