@@ -126,8 +126,6 @@ def messageViz(roomData):
 
 
 def pollViz(roomData):
-    print("POLL DATA")
-    print(roomData)
     pollOptions = roomData['poll_options']
     # creating the dataset
 
@@ -151,12 +149,6 @@ def pollViz(roomData):
     # Setting the interval of ticks of x-axis.
     listOf_Xticks = np.arange(0, len(pollOptions), 1)
     plt.xticks(listOf_Xticks)
-
-    print("CEILSS")
-
-    print(largestVal)
-    print(math.ceil(1.1))
-    print(math.ceil(largestVal * 1.1))
 
     # Setting the interval of ticks of y-axis.
     listOf_Yticks = np.arange(0, math.ceil(largestVal * 1.1) + 1, 1)

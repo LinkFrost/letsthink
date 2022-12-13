@@ -81,12 +81,12 @@ const fetchRoom = async (id: string) => {
 };
 
 const fetchRoomsByUser = async (id: string) => {
-  const room = await mongoCollection.findOne({ id: id });
+  const rooms = await mongoCollection.find({ user_id: id }).toArray();
 
-  return room;
+  return rooms;
 };
 
-app.get("/query/:room_id", async (req, res) => {
+app.get("/query/rooms/:room_id", async (req, res) => {
   try {
     const { room_id } = req.params;
     const room = await fetchRoom(room_id);
@@ -97,8 +97,12 @@ app.get("/query/:room_id", async (req, res) => {
   }
 });
 
-app.get("/query/:user_id", async (req, res) => {
+app.get("/query/rooms/user/:user_id", async (req, res) => {
   try {
+    const { user_id } = req.params;
+    const rooms = await fetchRoomsByUser(user_id);
+
+    return res.status(200).send(rooms);
   } catch (err) {
     res.status(500).send({ error: err });
   }
