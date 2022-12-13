@@ -107,7 +107,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className={`flex min-h-screen flex-col justify-start bg-neutral-900 ${inter.className}`}>
       <Header router={router} />
-      {children}
+      <main className="p-6">{children}</main>
       <Footer />
     </div>
   );
