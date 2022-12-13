@@ -45,7 +45,8 @@ eventBusChannel?.consume("query", async (message) => {
         const roomData = { ...data, expired: false };
         const related = roomData.room_type === "message" ? { messages: [] } : { poll_options: [] };
 
-        await mongoCollectionRoom.insertOne({ ...roomData, ...related });
+        await mongoCollection.insertOne({ ...roomData, ...related });
+        break;
       }
       case "RoomExpired": {
         // change expired flag with roomId
@@ -91,6 +92,7 @@ eventBusChannel?.consume("query", async (message) => {
 
 const fetchRoom = async (id: string) => {
   const room = await mongoCollectionRoom.findOne({ id: id });
+
 
   return room;
 };

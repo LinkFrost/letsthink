@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useRef, useMemo } from "react";
 import { AuthContext } from "../../utils/auth/auth";
 import Spinner from "../../components/other/Spinner";
 import { PollOptionType, PollOptionColor, SubmissionStatus, MessageType, RoomDataType } from "../../utils/types/types";
@@ -24,13 +24,25 @@ function relativeTimeSince(date: string) {
   }
 }
 
-const PollOption = (props: { id: string; title: string; votes: number; position: number; pollVote: string; votePoll: (id: string) => void }) => {
-  const { color, hover, selected } = pollOptionColors[props.position];
+const PollOption = (props: {
+  id: string;
+  title: string;
+  votes: number;
+  position: number;
+  pollVote: string;
+  votePoll: (id: string) => void;
+  roomExpired: boolean;
+}) => {
+  let { color, hover, selected } = pollOptionColors[props.position];
+
+  if (props.roomExpired) {
+    hover = "";
+  }
 
   let bgColor;
   let hoverColor;
 
-  if (!props.pollVote) {
+  if (!props.pollVote || props.roomExpired) {
     bgColor = color;
     hoverColor = hover;
   } else {
@@ -38,36 +50,36 @@ const PollOption = (props: { id: string; title: string; votes: number; position:
     hoverColor = "";
   }
 
-  if (props.pollVote === props.id) bgColor = selected;
+  if (props.pollVote === props.id && !props.roomExpired) bgColor = selected;
 
   return (
     <button
       onClick={() => props.votePoll(props.id)}
-      disabled={props.pollVote !== ""}
+      disabled={props.roomExpired || props.pollVote !== ""}
       className={`mb-2 box-border w-full max-w-3xl rounded-2xl ${bgColor} ${hoverColor} p-4`}
     >
       <div className="box-border flex flex-row items-center justify-between">
         <div className="flex flex-row items-center gap-2">
-          <h1 className="text-3xl font-semibold text-black">{props.title}</h1>
-          {props.pollVote === props.id && <Checkmark></Checkmark>}
+          <h1 className="text-2xl font-semibold text-black">{props.title}</h1>
+          {props.pollVote === props.id && !props.roomExpired && <Checkmark></Checkmark>}
         </div>
-        {props.pollVote && <h1 className="text-xl text-black">{props.votes} votes</h1>}
+        {(props.pollVote || props.roomExpired) && <h1 className="text-xl text-black">{props.votes} votes</h1>}
       </div>
     </button>
   );
 };
 
-const Message = (props: { id: string; content: string; create_date: string; votes: number; handleLike: (id: string) => void }) => {
+const Message = (props: { id: string; content: string; create_date: string; votes: number; handleLike: (id: string) => void; roomExpired: boolean }) => {
   const liked = window.sessionStorage.getItem(props.id);
 
   return (
-    <div className="flex h-full flex-col justify-between rounded-xl border-[1px] border-neutral-700 bg-neutral-800 p-6 shadow-lg shadow-neutral-900">
+    <div className="flex flex-col justify-between rounded-xl border-[1px] border-neutral-700 bg-neutral-800 p-6 shadow-lg shadow-neutral-900">
       <p className="pb-6">{props.content}</p>
       <div className="flex items-center justify-between border-t-[1px] border-neutral-700 pt-6">
         <button
-          disabled={Boolean(liked)}
+          disabled={Boolean(liked) || props.roomExpired}
           onClick={(e) => props.handleLike(props.id)}
-          className={`flex items-center gap-2 rounded-lg p-2 ${!liked && "hover:bg-pink-300"} hover:bg-opacity-30`}
+          className={`flex items-center gap-2 rounded-lg p-2 ${!liked && !props.roomExpired && "hover:bg-pink-300"} hover:bg-opacity-30`}
         >
           {liked ? <FilledHeart /> : <HeartOutline />}
           <span className="text-neutral-400">{props.votes}</span>
@@ -90,42 +102,57 @@ export default function RoomPage() {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [messageLoading, setMessageLoading] = useState(false);
   const [messageContent, setMessageContent] = useState("");
+  const isExpired = useMemo(() => roomData?.expired ?? false, [roomData?.expired]);
+  const interval = useRef<NodeJS.Timer>();
 
   useEffect(() => {
-    const fetchRoom = async (id: string) => {
-      if (id) {
-        const res = await fetch(`${QueryService}/query/rooms/${id}`, {
-          method: "GET",
-          credentials: "include",
-        });
+    if (isExpired) {
+      clearInterval(interval.current);
+    }
+  }, [isExpired]);
 
-        const data = (await res.json()) as RoomDataType;
+  useEffect(() => {
+    (async () => {
+      const fetchRoom = async (id: string) => {
+        if (id) {
+          const res = await fetch(`${QueryService}/query/rooms/${id}`, {
+            method: "GET",
+            credentials: "include",
+          });
+          const data = (await res.json()) as RoomDataType;
 
-        if (res.ok) {
-          setRoomData(data);
+          if (res.ok) {
+            setRoomData(data);
 
-          if (data.poll_options) {
-            setPollOptions(data.poll_options.sort((a, b) => a.position - b.position));
+            if (data.poll_options) {
+              setPollOptions(data.poll_options.sort((a, b) => a.position - b.position));
 
-            if (window.sessionStorage.getItem(data.id)) {
-              setPollVote(window.sessionStorage.getItem(data.id) as string);
+              if (window.sessionStorage.getItem(data.id)) {
+                setPollVote(window.sessionStorage.getItem(data.id) as string);
+              }
             }
-          }
 
-          if (data.messages) {
-            setMessages(data.messages.reverse());
+            if (data.messages) {
+              setMessages(data.messages.reverse());
+            }
+
+            return data;
           }
         }
-      }
-    };
+      };
 
-    fetchRoom(room_id);
+      const firstFetch = await fetchRoom(room_id);
 
-    setInterval(() => {
-      if (document.hasFocus()) {
-        fetchRoom(room_id);
+      if (!firstFetch?.expired) {
+        interval.current = setInterval(async () => {
+          if (document.hasFocus()) {
+            fetchRoom(room_id);
+          }
+        }, 2000);
       }
-    }, 2000);
+    })();
+
+    return () => clearInterval(interval.current);
   }, [room_id]);
 
   const votePoll = async (id: string) => {
@@ -212,7 +239,7 @@ export default function RoomPage() {
   };
 
   return (
-    <div className="p-8">
+    <>
       <Head>
         <title>letsthink</title>
         <meta name="description" content="Generated by create next app" />
@@ -223,10 +250,15 @@ export default function RoomPage() {
           <Spinner shade={900} size={6} />
         ) : (
           <div className="flex w-full flex-col items-center justify-center text-white">
-            <div className="max-w-screen-md text-center">
-              <h1 className="mb-3 break-normal text-6xl text-yellow-500">{roomData.title}</h1>
-              <p className="mb-3 px-3 text-center text-lg text-white">{roomData.about}</p>
-              <p className={"text-center text-xs text-red-500"}>{error.message}</p>
+            <div className="mb-10 flex max-w-screen-md flex-col items-center gap-10 text-center">
+              <h1 className="text-5xl text-yellow-400">{roomData.title}</h1>
+              <p>{roomData.about}</p>
+              {error.status === "error" && <p className="px-3 text-red-500">{error.message}</p>}
+              {isExpired && (
+                <p className="text-white-400 rounded-lg bg-red-400 px-4 py-1 text-center text-neutral-800">
+                  This room is expired but you can still view the results
+                </p>
+              )}
             </div>
             <div className="mt-5 w-full max-w-lg">
               {roomData.room_type === "poll" &&
@@ -239,9 +271,10 @@ export default function RoomPage() {
                     title={pollOption.title}
                     votes={pollOption.votes}
                     position={pollOption.position}
+                    roomExpired={roomData.expired}
                   />
                 ))}
-              {roomData.room_type === "message" && (
+              {!isExpired && roomData.room_type === "message" && (
                 <div className="flex flex-col items-center justify-center">
                   <textarea
                     className="mt-3 block w-full rounded-lg p-2 text-black"
@@ -269,12 +302,13 @@ export default function RoomPage() {
                     content={message.content}
                     create_date={message.create_date}
                     votes={message.votes}
+                    roomExpired={roomData.expired}
                   />
                 ))}
             </div>
           </div>
         )}
       </main>
-    </div>
+    </>
   );
 }
