@@ -91,7 +91,7 @@ eventBusChannel.consume(queue, async (message) => {
 
         // Update DB
         await mongoCollection.updateOne(
-          { email: "jbisceglia@umass.edu" },
+          { email: "sraju@umass.edu" },
           {
             $push: {
               visualizations: { imageUrl: imageUrl, room_id: id },
@@ -103,7 +103,7 @@ eventBusChannel.consume(queue, async (message) => {
         // Publish Visualization
         const event: RoomVisualized = {
           key: "RoomVisualized",
-          data: { id: id, room_id: id, title: resData.title, user_email: "jbisceglia@umass.edu", username: "jbisceglia", imageUrl: imageUrl },
+          data: { id: id, room_id: id, title: resData.title, user_email: "sraju@umass.edu", username: "sraju", imageUrl: imageUrl },
         };
         eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 

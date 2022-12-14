@@ -105,7 +105,7 @@ def messageViz(roomData):
     fig = plt.figure(figsize=(10, 5))
 
     # creating the bar plot
-    plt.bar(courses, values, color='blue',
+    plt.bar(courses, values, color=['red', 'green', 'blue'],
             width=0.4)
 
     # Setting the interval of ticks of x-axis.
@@ -118,7 +118,7 @@ def messageViz(roomData):
 
     plt.xlabel("Messages")
     plt.ylabel("Vote Count")
-    plt.title("Top Messages")
+    plt.title(f"Top Messages for {roomData['title']}")
     filePath = roomData['title'] + roomData['id'] + '.jpg'
     plt.savefig(filePath)
 
@@ -146,7 +146,7 @@ def pollViz(roomData):
     fig = plt.figure(figsize=(10, 5))
 
     # creating the bar plot
-    plt.bar(courses, values, color='blue',
+    plt.bar(courses, values, color=['red', 'green', 'blue'],
             width=0.4)
 
     # Setting the interval of ticks of x-axis.
