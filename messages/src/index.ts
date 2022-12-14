@@ -2,7 +2,13 @@ import initRabbit from "./utils/initRabbit.js";
 import initPostgres from "./utils/initPostgres.js";
 import initExpress from "./utils/initExpress.js";
 import z from "zod";
-import type { MessageCreated } from "./types/events.js";
+import type { HTTPRequest, MessageCreated } from "./types/events.js";
+import { Channel } from "amqplib";
+
+const publishHTTPEvent = (eventBus: Channel, code: number) => {
+  const event: HTTPRequest = { key: "HTTPRequest", data: { status: code } };
+  eventBus.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+};
 
 const queue = "messages";
 
@@ -77,8 +83,10 @@ app.post("/messages", async (req, res) => {
     const event: MessageCreated = { key: "MessageCreated", data: result.rows[0] };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
+    publishHTTPEvent(eventBusChannel, 200);
     res.status(200).json(result.rows[0]);
   } catch (err) {
+    publishHTTPEvent(eventBusChannel, 500);
     res.status(500).json({ error: err });
   }
 });

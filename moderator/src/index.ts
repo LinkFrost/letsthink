@@ -11,7 +11,7 @@ const mongoConfig = {
 };
 
 // initialize third party services
-const server = initExpress(4004);
+const app = initExpress(4004);
 const [mongoAcceptedMessages, mongoRejectedMessages, mongoBannedWords] = await initMongo(mongoConfig.db, mongoConfig.collections);
 
 // HELPER FUNCTIONS
@@ -41,14 +41,8 @@ const initBannedWords = async () => {
 
 const BANNED_WORDS = await initBannedWords();
 
-// HTTP SERVER
-// basic express route
-server.get("/", (req, res) => {
-  res.send("Moderator service");
-});
-
 // post request to test moderating a message
-server.post("/moderate", async (req, res) => {
+app.post("/moderate", async (req, res) => {
   const { message } = req.body;
 
   const { wasRejected, invalidWords } = moderate(BANNED_WORDS, message);

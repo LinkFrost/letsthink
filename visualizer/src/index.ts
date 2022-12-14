@@ -1,5 +1,4 @@
 import { EventKeys, RoomExpired, RoomVisualized, PollOptions } from "./types/events.js";
-import initExpress from "./utils/initExpress.js";
 import initEventBus from "./utils/initRabbit.js";
 import initMongo from "./utils/initMongo.js";
 import { WithId, ObjectId } from "mongodb";
@@ -39,10 +38,8 @@ const queue = "visualizer";
 const subscriptions: EventKeys[] = ["RoomVisualized", "RoomExpired"];
 
 // Initialize outside communications
-const { eventBusChannel, confirmChannel } = await initEventBus(queue, subscriptions);
+const { eventBusChannel } = await initEventBus(queue, subscriptions);
 const { mongoCollection } = await initMongo();
-
-const app = initExpress(4013);
 
 const getRoomData = async (room_id: string) => {
   try {
@@ -143,8 +140,4 @@ eventBusChannel.consume(queue, async (message) => {
   }
 
   eventBusChannel.ack(message);
-});
-
-app.get("/visualizer", async (req, res) => {
-  res.send("Viz Service Running");
 });

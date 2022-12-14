@@ -2,7 +2,13 @@ import initRabbit from "./utils/initRabbit.js";
 import initPostgres from "./utils/initPostgres.js";
 import initExpress from "./utils/initExpress.js";
 import z from "zod";
-import type { PollCreated } from "./types/events.js";
+import type { HTTPRequest, PollCreated } from "./types/events.js";
+import { Channel } from "amqplib";
+
+const publishHTTPEvent = (eventBus: Channel, code: number) => {
+  const event: HTTPRequest = { key: "HTTPRequest", data: { status: code } };
+  eventBus.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+};
 
 const queue = "polls";
 
@@ -91,8 +97,10 @@ app.post("/polls", async (req, res) => {
     const event: PollCreated = { key: "PollCreated", data: { room_id: room_id, poll_options: createdOptions } };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
+    publishHTTPEvent(eventBusChannel, 200);
     res.status(200).send({ success: "Created poll" });
   } catch (err) {
+    publishHTTPEvent(eventBusChannel, 500);
     res.status(500).send({ error: err });
   }
 });
