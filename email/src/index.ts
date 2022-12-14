@@ -38,29 +38,12 @@ eventBusChannel.consume(queue, async (message) => {
           { upsert: true }
         );
         break;
-      case "RoomExpired":
-        console.log("EMAIL: GOT ROOM EXPIRED EVENT");
-        break;
       default:
+        console.log(`Received unexpected envent type: ${key}`);
     }
   } catch (err) {
     eventBusChannel.nack(message);
   }
 
   eventBusChannel.ack(message);
-});
-
-// REST Server
-app.post("/testSend", (req, res) => {
-  const event: RoomVisualized = { key: "RoomVisualized", data: req.body };
-
-  confirmChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
-
-  res.sendStatus(200);
-});
-
-app.get("/checkMongo", async (req, res) => {
-  const viz = await mongoCollection.find({}).toArray();
-
-  res.send(viz);
 });
