@@ -28,37 +28,61 @@ type RoomBase = {
   expired: boolean;
 };
 
-// export function relativeTime(date: string, expired: boolean) {
-//   const formatter = new Intl.RelativeTimeFormat("en");
-//   const diff = new Date().valueOf() - new Date(date).valueOf();
+export function relativeTime(date: string, expired: boolean) {
+  const formatter = new Intl.RelativeTimeFormat("en");
+  const diff = new Date(date).valueOf() - new Date().valueOf();
 
-//   const unitsGrow = (diff: number) => {
-//     if (Math.floor(diff / (1000 * 60) / 60) > 24) {
-//       return formatter.format(Math.floor(diff / (1000 * 60 * 60 * 24)), "days");
-//     } else if (Math.floor(diff / (1000 * 60)) > 60) {
-//       return formatter.format(Math.floor(diff / (1000 * 60) / 60), "hours");
-//     } else if (Math.floor(diff / 1000) > 60) {
-//       return formatter.format(Math.floor(diff / (1000 * 60)), "minutes");
-//     } else {
-//       return formatter.format(Math.floor(diff / 1000), "seconds");
-//     }
-//   };
+  const unitsGrow = () => {
+    if (Math.floor(diff / (1000 * 60) / 60) > 24) {
+      return formatter.format(Math.floor(diff / (1000 * 60 * 60 * 24)), "days");
+    } else if (-Math.floor(diff / (1000 * 60)) > 60) {
+      return formatter.format(Math.floor(diff / (1000 * 60) / 60), "hours");
+    } else if (-Math.floor(diff / 1000) > 60) {
+      return formatter.format(Math.floor(diff / (1000 * 60)), "minutes");
+    } else {
+      return formatter.format(Math.floor(diff / 1000), "seconds");
+    }
+  };
 
-//   const unitsShrink = () => {};
+  const unitsShrink = () => {
+    if (Math.floor(diff / (1000 * 60)) < 1) {
+      return formatter.format(Math.floor(diff / 1000), "seconds");
+    } else if (Math.floor(diff / (1000 * 60)) < 60) {
+      return formatter.format(Math.floor(diff / (1000 * 60)), "minutes");
+    } else if (Math.floor(diff / (1000 * 60 * 60)) < 24) {
+      return formatter.format(Math.floor(diff / (1000 * 60 * 60)), "hours");
+    } else {
+      return formatter.format(Math.floor(diff / (1000 * 60 * 60 * 24)), "days");
+    }
+  };
 
-//   return expired ? unitsGrow(diff) : unitsShrink();
-// }
+  return expired ? unitsGrow() : unitsShrink();
+}
 
-// FIX
 const sortData = (data: Room[]) => {
+  const getDiff = (exp_date: string) => new Date(exp_date).valueOf() - new Date().valueOf();
   // sort data by create_date, and then by create_date, newest rooms first
   return data.sort((a, b) => {
-    if (a.create_date > b.create_date) {
-      return -1;
-    } else if (a.create_date < b.create_date) {
-      return 1;
+    if (a.expired !== b.expired) {
+      return a.expired ? 1 : -1;
     } else {
-      return 0;
+      if (a.expired) {
+        if (a.create_date > b.create_date) {
+          return -1;
+        } else if (a.create_date < b.create_date) {
+          return 1;
+        } else {
+          return 0;
+        }
+      } else {
+        if (getDiff(a.create_date) < getDiff(b.create_date)) {
+          return -1;
+        } else if (getDiff(a.create_date) > getDiff(b.create_date)) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
     }
   });
 };
@@ -83,16 +107,16 @@ const RoomCard = ({ room }: { room: Room }) => {
   const expire = new Date(room.expire_date);
   const diff = new Date(expire.getTime() - created.getTime()).getTime();
 
-  const date_string = room.expired ? `Ended ${relativeTimeSince(room.expire_date)}` : "";
+  const date_prefix = room.expired ? "Ended" : "Ending";
   return (
     <Link href={`/rooms/${room.id}`}>
-      <div className="flex flex-col justify-between gap-1 rounded-xl border-[1px] border-neutral-700 bg-neutral-800 p-6 shadow-lg shadow-neutral-900 transition-colors duration-75 hover:bg-neutral-700">
+      <div className="flex h-full flex-col justify-start gap-1 rounded-xl border-[1px] border-neutral-700 bg-neutral-800 p-6 shadow-lg shadow-neutral-900 transition-colors duration-75 hover:bg-neutral-700">
         <div className="flex w-full items-start justify-between">
           <p className={`mb-1 text-sm capitalize`}>{room.room_type} Room</p>
           <p className={`text-sm ${expiredFlagColor} mb-1 rounded-lg px-2 py-[0.125rem] font-medium text-neutral-900`}>{room.expired ? "expired" : "active"}</p>
         </div>
         <p className="text-xl font-bold">{room.title}</p>
-        <p className="pb-2 text-xs font-medium text-neutral-400">{date_string}</p>
+        <p className="pb-2 text-xs font-medium text-neutral-400">{`${date_prefix} ${relativeTime(room.expire_date, room.expired)}`}</p>
         <p className="text-base text-neutral-400">{condense(room.about)}</p>
         {/* <div className="flex items-center justify-between  border-neutral-700 pt-6"></div> */}
       </div>
@@ -129,11 +153,21 @@ export default function Me() {
           <h1 className="mb-3 text-4xl text-white">
             Welcome, <span className="font-bold text-yellow-500">{session.userData?.username}</span>. Here are your rooms:
           </h1>
-          <div className="grid w-full max-w-screen-xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {sortData(data ?? []).map((room: Room) => (
-              <RoomCard key={room.id} room={room} />
-            ))}
-          </div>
+          {data?.length ? (
+            <div className="grid w-full max-w-screen-xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {sortData(data ?? []).map((room: Room) => (
+                <RoomCard key={room.id} room={room} />
+              ))}
+            </div>
+          ) : (
+            <p>
+              {"You don't have any rooms yet."}{" "}
+              <Link className="hover:underline" href="/rooms/create">
+                Create one here
+              </Link>
+              .
+            </p>
+          )}
         </div>
       </Suspend>
     </>
