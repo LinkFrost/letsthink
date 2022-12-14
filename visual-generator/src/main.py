@@ -60,11 +60,25 @@ def generateVisual(reqData: dict):
     roomData = reqData["roomData"]
     roomType = roomData["room_type"]
     filePath = ''
+    defaultPath = 'https://letsthink-viz.s3.us-east-2.amazonaws.com/NoMessagesFound.png'
+
+    print("ROOMDATA")
+    print(roomData)
 
     if roomType == "message":
-        filePath = messageViz(roomData)
+        if roomData['messages'] == []:
+            return {
+                "imageUrl": defaultPath
+            }
+        else:
+            filePath = messageViz(roomData)
     elif roomType == "poll":
-        filePath = pollViz(roomData)
+        if roomData['poll_options'] == []:
+            return {
+                "imageUrl": defaultPath
+            }
+        else:
+            filePath = pollViz(roomData)
     else:
         raise HTTPException(status_code=400, detail="invalid json payload")
 
@@ -127,9 +141,6 @@ def messageViz(roomData):
 def pollViz(roomData):
     pollOptions = roomData['poll_options']
     # creating the dataset
-
-    if not pollOptions:
-        return
 
     data = {pollOption['title']:  pollOption['votes']
             for pollOption in pollOptions}
