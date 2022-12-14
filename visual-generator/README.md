@@ -86,7 +86,7 @@ interface pollRequestBody {
 
 ```JSON
 
-{"img_url": "https://letsthink-viz.s3.us-east-2.amazonaws.com/NoMessagesFound.png"}
+{"img_url": "https://letsthink-viz.s3.us-east-2.amazonaws.com/sample-url.png"}
 
 ```
 

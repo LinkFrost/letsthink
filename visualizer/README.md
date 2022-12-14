@@ -10,11 +10,7 @@ The visualizer service is responsible for processing a visualization of a room's
 
 ## Interaction
 
-When receiving a "RoomExpired" event, it calls the visual-generator service to generate the visualizations along with the URL to access them. Once finished, it sends out a "RoomVisualized" event which has the URL and other information related to the room.
-
-## Endpoints
-
-It has one test endpoint to check if the service is working. The service listens for "RoomExpired" events so that it can visualize the expired room. It then creates a "RoomVisualized" event which is then sent out based on the data that is processed. Both these event interfaces are shown below.
+When receiving a "RoomExpired" event, it calls the visual-generator service to generate the visualizations along with the URL to access them. The service listens for "RoomExpired" events so that it can visualize the expired room. It then creates a "RoomVisualized" event which is then sent out based on the data that is processed. Both these event interfaces are shown below.
 
 ```typescript
 interface RoomExpired {
@@ -37,6 +33,22 @@ interface RoomVisualized {
     imageUrl: string;
   };
 }
+```
+
+## Endpoints
+
+It has one test endpoint to check if the service is working.
+
+### `/visualizer`
+
+**Method**: GET
+
+**URL Params**: None
+
+**Body**:
+
+```js
+"Viz Service Running";
 ```
 
 ## How to Run
