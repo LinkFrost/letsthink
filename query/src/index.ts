@@ -93,7 +93,6 @@ eventBusChannel?.consume("query", async (message) => {
 const fetchRoom = async (id: string) => {
   const room = await mongoCollectionRoom.findOne({ id: id });
 
-
   return room;
 };
 
@@ -101,6 +100,12 @@ const fetchRoomsByUser = async (id: string) => {
   const rooms = await mongoCollectionRoom.find({ user_id: id }).toArray();
 
   return rooms;
+};
+
+const fetchUser = async (user_id: string) => {
+  const users = await mongoCollectionUsers.find({ id: user_id }).toArray();
+
+  return users[0];
 };
 
 app.get("/query/rooms/:room_id", async (req, res) => {
@@ -120,6 +125,17 @@ app.get("/query/rooms/user/:user_id", async (req, res) => {
     const rooms = await fetchRoomsByUser(user_id);
 
     return res.status(200).send(rooms);
+  } catch (err) {
+    res.status(500).send({ error: err });
+  }
+});
+
+app.get("/query/users/:user_id", async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    const user = await fetchUser(user_id);
+
+    return res.status(200).send(user);
   } catch (err) {
     res.status(500).send({ error: err });
   }

@@ -57,7 +57,6 @@ def read_root():
 
 @app.post("/visual")
 def generateVisual(reqData: dict):
-    print("VISUALIZING ROOM")
     roomData = reqData["roomData"]
     roomType = roomData["room_type"]
     filePath = ''
@@ -122,13 +121,10 @@ def messageViz(roomData):
     filePath = roomData['title'] + roomData['id'] + '.jpg'
     plt.savefig(filePath)
 
-    print("VISUALIZED MESSAGE")
-
     return filePath
 
 
 def pollViz(roomData):
-
     pollOptions = roomData['poll_options']
     # creating the dataset
 
@@ -162,8 +158,6 @@ def pollViz(roomData):
     plt.title(f"Poll Results for {roomData['title']}")
     filePath = roomData['title'] + roomData['id'] + '.jpg'
     plt.savefig(filePath)
-
-    print("VISUALIZED POLLS")
 
     return filePath
 
