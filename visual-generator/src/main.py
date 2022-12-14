@@ -57,15 +57,25 @@ def read_root():
 
 @app.post("/visual")
 def generateVisual(reqData: dict):
-    print("VISUALIZING ROOM")
     roomData = reqData["roomData"]
     roomType = roomData["room_type"]
     filePath = ''
+    defaultPath = 'https://letsthink-viz.s3.us-east-2.amazonaws.com/NoMessagesFound.png'
 
     if roomType == "message":
-        filePath = messageViz(roomData)
+        if roomData['messages'] == []:
+            return {
+                "imageUrl": defaultPath
+            }
+        else:
+            filePath = messageViz(roomData)
     elif roomType == "poll":
-        filePath = pollViz(roomData)
+        if roomData['poll_options'] == []:
+            return {
+                "imageUrl": defaultPath
+            }
+        else:
+            filePath = pollViz(roomData)
     else:
         raise HTTPException(status_code=400, detail="invalid json payload")
 
@@ -105,7 +115,7 @@ def messageViz(roomData):
     fig = plt.figure(figsize=(10, 5))
 
     # creating the bar plot
-    plt.bar(courses, values, color='blue',
+    plt.bar(courses, values, color=['red', 'green', 'blue'],
             width=0.4)
 
     # Setting the interval of ticks of x-axis.
@@ -118,22 +128,16 @@ def messageViz(roomData):
 
     plt.xlabel("Messages")
     plt.ylabel("Vote Count")
-    plt.title("Top Messages")
+    plt.title(f"Top Messages for {roomData['title']}")
     filePath = roomData['title'] + roomData['id'] + '.jpg'
     plt.savefig(filePath)
-
-    print("VISUALIZED MESSAGE")
 
     return filePath
 
 
 def pollViz(roomData):
-
     pollOptions = roomData['poll_options']
     # creating the dataset
-
-    if not pollOptions:
-        return
 
     data = {pollOption['title']:  pollOption['votes']
             for pollOption in pollOptions}
@@ -146,7 +150,7 @@ def pollViz(roomData):
     fig = plt.figure(figsize=(10, 5))
 
     # creating the bar plot
-    plt.bar(courses, values, color='blue',
+    plt.bar(courses, values, color=['red', 'green', 'blue'],
             width=0.4)
 
     # Setting the interval of ticks of x-axis.
@@ -162,8 +166,6 @@ def pollViz(roomData):
     plt.title(f"Poll Results for {roomData['title']}")
     filePath = roomData['title'] + roomData['id'] + '.jpg'
     plt.savefig(filePath)
-
-    print("VISUALIZED POLLS")
 
     return filePath
 

@@ -2,6 +2,7 @@ import { EventKeys, RoomExpired, RoomVisualized, PollOptions } from "./types/eve
 import initExpress from "./utils/initExpress.js";
 import initEventBus from "./utils/initRabbit.js";
 import initMongo from "./utils/initMongo.js";
+import { WithId, ObjectId } from "mongodb";
 
 // Event Types that email service is interested in
 type Event = RoomVisualized | RoomExpired;
@@ -16,6 +17,13 @@ type Room = {
   create_date: string;
   expire_date: string;
 };
+
+interface UserData extends WithId<Document> {
+  __id: ObjectId;
+  id: string;
+  email: string;
+  username: string;
+}
 
 type Message = { votes: number; id: string; room_id: string; content: string };
 
@@ -42,6 +50,22 @@ const getRoomData = async (room_id: string) => {
 
     if (!response.ok) {
       console.log("Room Data Invalid");
+      return null;
+    }
+
+    return await response.json();
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+};
+
+const getUserData = async (user_id: string) => {
+  try {
+    const response = await fetch(`http://query:4011/query/users/${user_id}`);
+
+    if (!response.ok) {
+      console.log("User Data Invalid");
       return null;
     }
 
@@ -89,9 +113,12 @@ eventBusChannel.consume(queue, async (message) => {
         // Get Image URL
         const { imageUrl } = await response.json();
 
+        // Get User Data by Id
+        const userData: UserData = await getUserData(resData.user_id);
+
         // Update DB
         await mongoCollection.updateOne(
-          { email: "jbisceglia@umass.edu" },
+          { email: userData.email },
           {
             $push: {
               visualizations: { imageUrl: imageUrl, room_id: id },
@@ -103,7 +130,7 @@ eventBusChannel.consume(queue, async (message) => {
         // Publish Visualization
         const event: RoomVisualized = {
           key: "RoomVisualized",
-          data: { id: id, room_id: id, title: resData.title, user_email: "jbisceglia@umass.edu", username: "jbisceglia", imageUrl: imageUrl },
+          data: { id: id, room_id: id, title: resData.title, user_email: userData.email, username: userData.id, imageUrl: imageUrl },
         };
         eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
@@ -119,10 +146,5 @@ eventBusChannel.consume(queue, async (message) => {
 });
 
 app.get("/visualizer", async (req, res) => {
-  const event: RoomExpired = {
-    key: "RoomExpired",
-    data: { id: "string" },
-  };
-  eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
-  res.send("test");
+  res.send("Viz Service Running");
 });
