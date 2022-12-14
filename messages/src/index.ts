@@ -52,7 +52,7 @@ eventBusChannel.consume(queue, async (message) => {
 app.post("/messages", async (req, res) => {
   const reqBody = z.object({
     room_id: z.string(),
-    content: z.string(),
+    content: z.string().min(1).max(150),
   });
 
   try {

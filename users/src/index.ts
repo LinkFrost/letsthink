@@ -5,8 +5,8 @@ import { EventKeys, UserCreated } from "./types/events.js";
 import { z } from "zod";
 import * as argon2 from "argon2";
 
-// data legnth restraints
-const REQS_PW = { min: 5, max: 128 };
+// CONSTANTS
+const REQS_PW = { min: 8, max: 128 };
 const REQS_USERNAME = { min: 3, max: 24 };
 
 // incoming user fields

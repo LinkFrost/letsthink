@@ -72,8 +72,8 @@ app.get("/auth/refresh", async (req, res) => {
 
 app.post("/auth/login", async (req, res) => {
   const reqBody = z.object({
-    email: z.string(),
-    password: z.string(),
+    email: z.string().email(),
+    password: z.string().min(8).max(128),
   });
 
   try {

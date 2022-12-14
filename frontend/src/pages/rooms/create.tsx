@@ -40,10 +40,6 @@ export default function Create() {
       errors["title"] = "Need to set room title!";
     }
 
-    if (!about) {
-      errors["about"] = "Need to set about information!";
-    }
-
     if (!type) {
       errors["about"] = "Need to select a room type!";
     }
@@ -180,7 +176,15 @@ export default function Create() {
                 <label htmlFor="title">
                   <p className="text-lg">Title:</p>
                 </label>
-                <input id="name" className="rounded-md px-2 py-[0.125rem] text-black" ref={title} type="text" placeholder="Name of the room"></input>
+                <input
+                  id="name"
+                  className="rounded-md px-2 py-[0.125rem] text-black"
+                  ref={title}
+                  type="text"
+                  placeholder="Name of the room"
+                  min={1}
+                  max={60}
+                ></input>
                 <p className="text-xs text-red-400">{formErrors.title}</p>
 
                 <label htmlFor="about">
@@ -193,6 +197,7 @@ export default function Create() {
                   className="w-96 rounded-md px-2 py-[0.125rem] text-black"
                   placeholder="What the room is all about"
                   value={about}
+                  maxLength={75}
                 ></textarea>
                 <p className="text-xs text-red-400">{formErrors.about}</p>
 
