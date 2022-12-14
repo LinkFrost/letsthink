@@ -12,10 +12,10 @@ const { app } = initExpress(4001);
 app.post("/rooms", async (req, res) => {
   const reqBody = z.object({
     user_id: z.string(),
-    title: z.string(),
-    about: z.string(),
+    title: z.string().min(1).max(60),
+    about: z.string().max(75),
     room_type: z.literal("message").or(z.literal("poll")),
-    duration: z.number().int(),
+    duration: z.number().int().min(1).max(10080),
   });
 
   try {
@@ -45,7 +45,6 @@ app.post("/rooms", async (req, res) => {
     // once this is sent, client should assume room id exists but does not know if query/other services are finished handling RoomCreated
 
     return res.status(201).send(eventData);
-
   } catch (err) {
     return res.status(500).send({ error: err });
   }

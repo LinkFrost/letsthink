@@ -74,7 +74,7 @@ const Message = (props: { id: string; content: string; create_date: string; vote
 
   return (
     <div className="flex flex-col justify-between rounded-xl border-[1px] border-neutral-700 bg-neutral-800 p-6 shadow-lg shadow-neutral-900">
-      <p className="pb-6">{props.content}</p>
+      <p className="break-words pb-6">{props.content}</p>
       <div className="flex items-center justify-between border-t-[1px] border-neutral-700 pt-6">
         <button
           disabled={Boolean(liked) || props.roomExpired}
@@ -281,6 +281,8 @@ export default function RoomPage() {
                     placeholder="Enter your message here"
                     value={messageContent}
                     onChange={(e) => setMessageContent(e.target.value)}
+                    minLength={1}
+                    maxLength={150}
                   />
                   <button
                     disabled={messageLoading || !messageContent.length}

@@ -54,12 +54,15 @@ eventBusChannel.consume(queue, async (message) => {
 app.post("/polls", async (req, res) => {
   const reqBody = z.object({
     room_id: z.string(),
-    poll_options: z.array(
-      z.object({
-        title: z.string(),
-        position: z.number(),
-      })
-    ),
+    poll_options: z
+      .array(
+        z.object({
+          title: z.string().min(1).max(60),
+          position: z.number().int(),
+        })
+      )
+      .min(2)
+      .max(10),
   });
 
   try {
