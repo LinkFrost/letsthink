@@ -21,6 +21,7 @@ const defaultForm: FormType = {
 export default function Create() {
   // const session = useContext(AuthContext);
   const session = useProtectedPageSession();
+  console.log(session);
 
   const title = useRef() as React.MutableRefObject<HTMLInputElement>;
   const [about, setAbout] = useState<string>("");
@@ -171,7 +172,7 @@ export default function Create() {
         {session.loading ? (
           <Spinner />
         ) : (
-          session.token && (
+          session.isAuth && (
             <div className="flex  max-w-2xl flex-col justify-center text-white">
               <h1 className="mb-3 text-4xl text-yellow-500">Create Room</h1>
 
