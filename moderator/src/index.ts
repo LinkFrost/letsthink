@@ -1,27 +1,20 @@
-import initRabbit from "./utils/init/initRabbit.js";
 import initExpress from "./utils/init/initExpress.js";
 import initMongo from "./utils/init/initMongo.js";
 import { moderate } from "./utils/moderate.js";
 import banned_json from "./utils/banned.json" assert { type: "json" };
 
-const queue = "moderator";
+// SETUP
+// config
+const mongoConfig = {
+  db: "moderator",
+  collections: ["acceptedMessages", "rejectedMessages", "bannedWords"],
+};
 
-// init third party services
-const { eventBusChannel } = await initRabbit(queue, ["RoomCreated", "RoomExpired"]);
+// initialize third party services
 const server = initExpress(4004);
-const [mongoAcceptedMessages, mongoRejectedMessages, mongoBannedWords] = await initMongo("moderator", [
-  "accepted-messages",
-  "rejected-messages",
-  "banned-words",
-]);
+const [mongoAcceptedMessages, mongoRejectedMessages, mongoBannedWords] = await initMongo(mongoConfig.db, mongoConfig.collections);
 
-let BANNED_WORDS = (await mongoBannedWords.find().toArray()).map((word) => word.word);
-
-if (!BANNED_WORDS?.length) {
-  await mongoBannedWords.insertMany(banned_json.map((word) => ({ word })));
-}
-
-// helper functions
+// HELPER FUNCTIONS
 // store moderated message in mongo
 const storeModeratedMessage = async (message: string, rejected: boolean, invalidWords: string[]) => {
   if (rejected) {
@@ -31,6 +24,23 @@ const storeModeratedMessage = async (message: string, rejected: boolean, invalid
   }
 };
 
+// handle banned words insertion
+const initBannedWords = async () => {
+  const readBannedWords = async () => (await mongoBannedWords.find().toArray()).map((word) => word.word);
+
+  let bannedWordsFromDb = await readBannedWords();
+
+  if (!bannedWordsFromDb?.length) {
+    await mongoBannedWords.insertMany(banned_json.map((word) => ({ word })));
+    bannedWordsFromDb = await readBannedWords();
+  }
+
+  return bannedWordsFromDb;
+};
+
+const BANNED_WORDS = await initBannedWords();
+
+// HTTP SERVER
 // basic express route
 server.get("/", (req, res) => {
   res.send("Moderator service");
