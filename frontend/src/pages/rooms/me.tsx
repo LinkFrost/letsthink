@@ -1,12 +1,9 @@
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { useContext, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import Suspend from "../../components/utils/Suspend";
-import { AuthContext } from "../../utils/auth/auth";
 import useHttps from "../../utils/hooks/useHttp";
 import { useProtectedPageSession } from "../../utils/hooks/useProtectedPageSession";
 import { QueryService } from "../../utils/services";
-import { relativeTimeSince } from "./[room_id]";
 
 // CONSTANTS
 const ROOM_DESCRIPTION_PREVIEW_SIZE = 75;
@@ -134,14 +131,14 @@ export default function Me() {
 
   return (
     <>
-      <Suspend loading={loading || session.loading} errored={!session || error}>
-        <div className="flex w-full flex-col items-center justify-center gap-6 pt-4 text-white">
+      <div className="flex w-full flex-col items-center justify-center gap-6 pt-4 text-white">
+        <Suspend loading={loading || session.loading} errored={!session || error}>
           <h1 className="mb-3 text-4xl text-white">
             Welcome, <span className="font-bold text-yellow-500">{session.userData?.username}</span>. Here are your rooms:
           </h1>
           {data?.length ? <MyRoomsList data={sortData(data)} /> : <NoRoomsFound />}
-        </div>
-      </Suspend>
+        </Suspend>
+      </div>
     </>
   );
 }
