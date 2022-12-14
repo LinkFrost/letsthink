@@ -23,6 +23,9 @@ const initSendInBlue = () => {
 
 const buildEmail = (mailInstance: SendInBlue.SendSmtpEmail) => {
   mailInstance.sender = { name: SENDER_NAME, email: SENDER_EMAIL };
+  mailInstance.subject = "";
+  mailInstance.htmlContent = "";
+  mailInstance.to = [];
 
   return {
     setSubject: function (roomTitle: string) {
@@ -57,11 +60,11 @@ const sendInBlue = async () => {
       return await mailer
         .sendTransacEmail(currentMail)
         .then((d) => {
-          console.log(`API called successfully. Returned data: ${JSON.stringify(d)}`);
+          console.log(`Email successfully sent.`);
           return data;
         })
         .catch((err) => {
-          console.log(err);
+          console.log(`Email unable to be sent.`);
           return false;
         });
     },
