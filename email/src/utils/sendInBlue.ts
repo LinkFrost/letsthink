@@ -33,14 +33,14 @@ const buildEmail = (mailInstance: SendInBlue.SendSmtpEmail) => {
       return this;
     },
     setHtmlContent: function (imageUrl: string) {
-      mailInstance.htmlContent = `<html><body><h3>Here's a summary of your requested room:</h3><br/><img src="${imageUrl}"/></body></html>`;
+      mailInstance.htmlContent = `<html><body><h3>Here's a summary of your expired room:</h3><br/><img src="${imageUrl}"/></body></html>`;
       return this;
     },
     setRecipients: function (recipients: [{ name: string; email: string }]) {
       mailInstance.to = recipients;
       return this;
     },
-    built: function () {
+    build: function () {
       return mailInstance;
     },
   };
@@ -55,7 +55,7 @@ const sendInBlue = async () => {
         .setSubject(data.title)
         .setHtmlContent(data.imageUrl)
         .setRecipients([{ name: data.username, email: data.user_email }])
-        .built();
+        .build();
 
       return await mailer
         .sendTransacEmail(currentMail)
