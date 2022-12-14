@@ -103,7 +103,7 @@ eventBusChannel.consume(queue, async (message) => {
         // Publish Visualization
         const event: RoomVisualized = {
           key: "RoomVisualized",
-          data: { id: id, room_id: id, title: resData.title, user_email: "sraju@umass.edu", username: "sraju", imageUrl: imageUrl },
+          data: { id: id, room_id: id, title: resData.title, user_email: "sraju@umass.edu", username: resData.user_id, imageUrl: imageUrl },
         };
         eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
@@ -119,10 +119,5 @@ eventBusChannel.consume(queue, async (message) => {
 });
 
 app.get("/visualizer", async (req, res) => {
-  const event: RoomExpired = {
-    key: "RoomExpired",
-    data: { id: "string" },
-  };
-  eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
-  res.send("test");
+  res.send("Viz Service Running");
 });
