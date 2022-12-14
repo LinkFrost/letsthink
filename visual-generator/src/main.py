@@ -62,9 +62,6 @@ def generateVisual(reqData: dict):
     filePath = ''
     defaultPath = 'https://letsthink-viz.s3.us-east-2.amazonaws.com/NoMessagesFound.png'
 
-    print("ROOMDATA")
-    print(roomData)
-
     if roomType == "message":
         if roomData['messages'] == []:
             return {
