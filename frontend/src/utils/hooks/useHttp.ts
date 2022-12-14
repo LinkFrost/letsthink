@@ -1,18 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-// Trying to lessen annoyingness of fetching on page load. This may need to evolve,
-// but I think it works on standard test cases + is generic for different data types
-const useHttps = <T>(url: string) => {
-  const [data, setData] = useState<T>(undefined as T);
+const useHttps = <T>(url: string, options?: RequestInit) => {
+  const [data, setData] = useState<T>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(url, {
-        credentials: "include",
-      });
+      const res = await fetch(url, options);
       const data = await res.json();
 
       setData(data);
@@ -21,7 +17,7 @@ const useHttps = <T>(url: string) => {
       setError(true);
       setLoading(false);
     }
-  }, [url]);
+  }, [url, options]);
 
   useEffect(() => {
     fetchData();
