@@ -1,5 +1,4 @@
 import { EventKeys, RoomExpired, RoomVisualized } from "./types/events.js";
-import initExpress from "./utils/initExpress.js";
 import initEventBus from "./utils/initRabbit.js";
 import sendInBlue from "./utils/sendInBlue.js";
 import initMongo from "./utils/initMongo.js";
@@ -11,9 +10,8 @@ const queue = "email";
 const subscriptions: EventKeys[] = ["RoomVisualized", "RoomExpired"];
 
 // Initialize outside communications
-const { eventBusChannel, confirmChannel } = await initEventBus(queue, subscriptions);
+const { eventBusChannel } = await initEventBus(queue, subscriptions);
 const { mongoCollection } = await initMongo();
-const app = initExpress(4005);
 const { sendEmail } = await sendInBlue();
 
 // Handle Event Bus Subscriptions
