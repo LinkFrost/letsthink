@@ -5,6 +5,7 @@ import Spinner from "../../components/other/Spinner";
 import { SubmissionStatus } from "../../utils/types/types";
 import { PollsService, RoomsService } from "../../utils/services";
 import Router from "next/router";
+import { useProtectedPageSession } from "../../utils/hooks/useProtectedPageSession";
 
 type FormFields = "title" | "about" | "type" | "duration" | "poll_options";
 type FormType = Record<FormFields, string | number>;
@@ -18,7 +19,9 @@ const defaultForm: FormType = {
 };
 
 export default function Create() {
-  const session = useContext(AuthContext);
+  // const session = useContext(AuthContext);
+  const session = useProtectedPageSession();
+  console.log(session);
 
   const title = useRef() as React.MutableRefObject<HTMLInputElement>;
   const [about, setAbout] = useState<string>("");
@@ -166,112 +169,118 @@ export default function Create() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex flex-col items-center justify-center">
-        <div className="flex  max-w-2xl flex-col justify-center text-white">
-          <h1 className="mb-3 text-4xl text-yellow-500">Create Room</h1>
+        {session.loading ? (
+          <Spinner />
+        ) : (
+          session.isAuth && (
+            <div className="flex  max-w-2xl flex-col justify-center text-white">
+              <h1 className="mb-3 text-4xl text-yellow-500">Create Room</h1>
 
-          <form className="flex flex-col items-start gap-1" autoComplete="off">
-            <label htmlFor="title">
-              <p className="text-lg">Title:</p>
-            </label>
-            <input id="name" className="rounded-md px-2 py-[0.125rem] text-black" ref={title} type="text" placeholder="Name of the room"></input>
-            <p className="text-xs text-red-400">{formErrors.title}</p>
+              <form className="flex flex-col items-start gap-1" autoComplete="off">
+                <label htmlFor="title">
+                  <p className="text-lg">Title:</p>
+                </label>
+                <input id="name" className="rounded-md px-2 py-[0.125rem] text-black" ref={title} type="text" placeholder="Name of the room"></input>
+                <p className="text-xs text-red-400">{formErrors.title}</p>
 
-            <label htmlFor="about">
-              <p className="text-lg ">About:</p>
-            </label>
-            <textarea
-              onChange={(e) => setAbout(e.target.value)}
-              id="about"
-              rows={4}
-              className="w-96 rounded-md px-2 py-[0.125rem] text-black"
-              placeholder="What the room is all about"
-              value={about}
-            ></textarea>
-            <p className="text-xs text-red-400">{formErrors.about}</p>
+                <label htmlFor="about">
+                  <p className="text-lg ">About:</p>
+                </label>
+                <textarea
+                  onChange={(e) => setAbout(e.target.value)}
+                  id="about"
+                  rows={4}
+                  className="w-96 rounded-md px-2 py-[0.125rem] text-black"
+                  placeholder="What the room is all about"
+                  value={about}
+                ></textarea>
+                <p className="text-xs text-red-400">{formErrors.about}</p>
 
-            <label htmlFor="duration">
-              <p className="text-lg">Duration (min):</p>
-            </label>
-            <input
-              onChange={(e) => setDuration(parseInt(e.target.value))}
-              id="duration"
-              className="w-16 rounded-md px-2 py-[0.125rem] text-black"
-              value={duration}
-              type="number"
-            ></input>
-            <p className="text-xs text-red-400">{formErrors.duration}</p>
+                <label htmlFor="duration">
+                  <p className="text-lg">Duration (min):</p>
+                </label>
+                <input
+                  onChange={(e) => setDuration(parseInt(e.target.value))}
+                  id="duration"
+                  className="w-16 rounded-md px-2 py-[0.125rem] text-black"
+                  value={duration}
+                  type="number"
+                ></input>
+                <p className="text-xs text-red-400">{formErrors.duration}</p>
 
-            <div className="flex items-center gap-2">
-              <label>
-                <p className="text-lg ">Type:</p>
-              </label>
-              <div className="flex gap-4">
-                <div className="flex gap-2">
-                  <input onChange={(e) => setType(e.target.value)} type="radio" id="messages" name="type" value="message"></input>
-                  <label htmlFor="messages">
-                    <p className="text-md">Messages</p>
+                <div className="flex items-center gap-2">
+                  <label>
+                    <p className="text-lg ">Type:</p>
                   </label>
-                </div>
-                <div className="flex gap-2">
-                  <input onChange={(e) => setType(e.target.value)} type="radio" id="polls" name="type" value="poll"></input>
-                  <label htmlFor="polls">
-                    <p className="text-md">Poll</p>
-                  </label>
-                </div>
-              </div>
-              <p className="text-xs text-red-400">{formErrors.type}</p>
-            </div>
-
-            {type == "poll" && (
-              <div className="mt-5 flex flex-col gap-2">
-                {pollOptions.map((pollOption, index) => {
-                  const placeholder = `Option ${index + 1}`;
-
-                  return (
-                    <div key={index}>
-                      <div className="flex gap-2">
-                        <input
-                          onChange={(e) => changePollOption(e, index)}
-                          id="index"
-                          className="w-40 rounded-md px-2 py-[0.125rem] text-black"
-                          type="text"
-                          placeholder={placeholder}
-                          value={pollOption.title}
-                        ></input>
-                        {index > 1 && (
-                          <button
-                            onClick={() => removePollOption(index)}
-                            className="flex justify-center rounded-full bg-red-400 px-4 font-bold text-white hover:bg-red-300"
-                            type="button"
-                          >
-                            -
-                          </button>
-                        )}
-                      </div>
-                      {pollOptions.length < 10 && index == pollOptions.length - 1 && (
-                        <div className="mt-2">
-                          <button onClick={newPollOption} className="flex rounded-full bg-blue-400 px-4 font-bold text-white hover:bg-blue-300">
-                            +
-                          </button>
-                        </div>
-                      )}
+                  <div className="flex gap-4">
+                    <div className="flex gap-2">
+                      <input onChange={(e) => setType(e.target.value)} type="radio" id="messages" name="type" value="message"></input>
+                      <label htmlFor="messages">
+                        <p className="text-md">Messages</p>
+                      </label>
                     </div>
-                  );
-                })}
-                <p className="text-xs text-red-400">{formErrors.poll_options}</p>
-              </div>
-            )}
-          </form>
+                    <div className="flex gap-2">
+                      <input onChange={(e) => setType(e.target.value)} type="radio" id="polls" name="type" value="poll"></input>
+                      <label htmlFor="polls">
+                        <p className="text-md">Poll</p>
+                      </label>
+                    </div>
+                  </div>
+                  <p className="text-xs text-red-400">{formErrors.type}</p>
+                </div>
 
-          <button
-            disabled={createLoading}
-            onClick={(e) => createRoom(e)}
-            className="w-30 mt-5 flex justify-center rounded-xl bg-yellow-400 p-2 text-lg text-black hover:bg-yellow-200"
-          >
-            {createLoading ? <Spinner shade={900} size={6} /> : "Create"}
-          </button>
-          <p className={"text-center text-xs text-red-500"}>{submissionStatus.message}</p>
-        </div>
+                {type == "poll" && (
+                  <div className="mt-5 flex flex-col gap-2">
+                    {pollOptions.map((pollOption, index) => {
+                      const placeholder = `Option ${index + 1}`;
+
+                      return (
+                        <div key={index}>
+                          <div className="flex gap-2">
+                            <input
+                              onChange={(e) => changePollOption(e, index)}
+                              id="index"
+                              className="w-40 rounded-md px-2 py-[0.125rem] text-black"
+                              type="text"
+                              placeholder={placeholder}
+                              value={pollOption.title}
+                            ></input>
+                            {index > 1 && (
+                              <button
+                                onClick={() => removePollOption(index)}
+                                className="flex justify-center rounded-full bg-red-400 px-4 font-bold text-white hover:bg-red-300"
+                                type="button"
+                              >
+                                -
+                              </button>
+                            )}
+                          </div>
+                          {pollOptions.length < 10 && index == pollOptions.length - 1 && (
+                            <div className="mt-2">
+                              <button onClick={newPollOption} className="flex rounded-full bg-blue-400 px-4 font-bold text-white hover:bg-blue-300">
+                                +
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <p className="text-xs text-red-400">{formErrors.poll_options}</p>
+                  </div>
+                )}
+              </form>
+
+              <button
+                disabled={createLoading}
+                onClick={(e) => createRoom(e)}
+                className="w-30 mt-5 flex justify-center rounded-xl bg-yellow-400 p-2 text-lg text-black hover:bg-yellow-200"
+              >
+                {createLoading ? <Spinner shade={900} size={6} /> : "Create"}
+              </button>
+              <p className={"text-center text-xs text-red-500"}>{submissionStatus.message}</p>
+            </div>
+          )
+        )}
       </main>
     </div>
   );

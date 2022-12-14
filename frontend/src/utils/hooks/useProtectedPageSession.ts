@@ -6,7 +6,7 @@ const useProtectedPageSession = () => {
   const router = useRouter();
   const session = useContext(AuthContext);
   useEffect(() => {
-    if (!session.loading && !session.token) {
+    if (!session.loading && !session.isAuth) {
       // redirect to login
       router.push("/");
     }
