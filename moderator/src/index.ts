@@ -30,7 +30,8 @@ const initBannedWords = async () => {
 
   let bannedWordsFromDb = await readBannedWords();
 
-  if (!bannedWordsFromDb?.length) {
+  if (!bannedWordsFromDb?.length || bannedWordsFromDb.length !== banned_json.length) {
+    await mongoBannedWords.deleteMany({});
     await mongoBannedWords.insertMany(banned_json.map((word) => ({ word })));
     bannedWordsFromDb = await readBannedWords();
   }
