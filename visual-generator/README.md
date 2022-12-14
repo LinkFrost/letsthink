@@ -97,11 +97,3 @@ To install requirements, run `pip install --no-cache-dir --upgrade -r ./requirem
 ## Exceeding
 
 For the exceeding section, this functionality of the visualization is split into two services. This is visual-generator and the other one is visualizer. This service is written in python and is responsible for actually generating the visualization image and then uploading it to generate the URL. This is due to the better visualization capability offered by libraries in python. The other service is responsible for mostly event logic and database logic.
-
-```
-
-```
-
-```
-
-```
