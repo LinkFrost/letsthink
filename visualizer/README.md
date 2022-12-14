@@ -14,7 +14,30 @@ When receiving a "RoomExpired" event, it calls the visual-generator service to g
 
 ## Endpoints
 
-It has one test endpoint to check if the service is working.
+It has one test endpoint to check if the service is working. The service listens for "RoomExpired" events so that it can visualize the expired room. It then creates a "RoomVisualized" event which is then sent out based on the data that is processed. Both these event interfaces are shown below.
+
+```typescript
+interface RoomExpired {
+  key: "RoomExpired";
+  data: {
+    id: string;
+  };
+}
+```
+
+```typescript
+interface RoomVisualized {
+  key: "RoomVisualized";
+  data: {
+    id: string;
+    room_id: string;
+    title: string;
+    user_email: string;
+    username: string;
+    imageUrl: string;
+  };
+}
+```
 
 ## How to Run
 

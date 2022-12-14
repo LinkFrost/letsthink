@@ -16,6 +16,40 @@ Whenever the service receives an event "RoomCreated" or "UserCreated", it will a
 
 It has a single endpoint which is used to retrieve the site-health data (GET).
 
+```typescript
+interface RoomExpired {
+  key: "RoomExpired";
+  data: {
+    id: string;
+  };
+}
+```
+
+### `/site-health`
+
+**Method**: GET
+
+**URL Params**: None
+
+**Body**: None
+
+### Sample Response
+
+```JSON
+{
+    "totalRooms": 14,
+    "activeRooms": 3,
+    "expiredRooms": 11,
+    "pollRooms": 5,
+    "messageRooms": 9,
+    "totalVotes": 15,
+    "totalMessages": 44,
+    "totalUsers": 9,
+    "totalRequests": 30,
+    "errors": 2,
+}
+```
+
 ## How to Run
 
 To run this service, run `npm install` and `npm run dev`. To build the typescript, you can use the `npm run build` command.
