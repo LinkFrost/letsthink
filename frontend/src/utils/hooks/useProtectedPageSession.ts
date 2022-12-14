@@ -10,7 +10,7 @@ const useProtectedPageSession = () => {
       // redirect to login
       router.push("/");
     }
-  }, [session?.token, router, session?.loading]);
+  }, [session?.isAuth, router, session?.loading]);
 
   return session;
 };
