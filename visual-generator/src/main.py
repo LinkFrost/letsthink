@@ -92,7 +92,9 @@ def generateVisual(reqData: dict):
 
 def messageViz(roomData):
     messages = roomData['messages']
-    res = sorted(messages, key=lambda x: x['votes'], reverse=True)[0:3]
+    res = sorted(messages, key=lambda x: x['votes'], reverse=True)
+
+    res = res[0:(min(len(res), 3))]
 
     # creating the dataset
     data = {m['content']:  m['votes'] for m in res}
