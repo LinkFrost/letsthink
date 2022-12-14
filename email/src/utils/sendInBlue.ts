@@ -23,6 +23,9 @@ const initSendInBlue = () => {
 
 const buildEmail = (mailInstance: SendInBlue.SendSmtpEmail) => {
   mailInstance.sender = { name: SENDER_NAME, email: SENDER_EMAIL };
+  mailInstance.subject = "";
+  mailInstance.htmlContent = "";
+  mailInstance.to = [];
 
   return {
     setSubject: function (roomTitle: string) {
@@ -30,14 +33,14 @@ const buildEmail = (mailInstance: SendInBlue.SendSmtpEmail) => {
       return this;
     },
     setHtmlContent: function (imageUrl: string) {
-      mailInstance.htmlContent = `<html><body><h3>Here's a summary of your requested room:</h3><br/><img src="${imageUrl}"/></body></html>`;
+      mailInstance.htmlContent = `<html><body><h3>Here's a summary of your expired room:</h3><br/><img src="${imageUrl}"/></body></html>`;
       return this;
     },
     setRecipients: function (recipients: [{ name: string; email: string }]) {
       mailInstance.to = recipients;
       return this;
     },
-    built: function () {
+    build: function () {
       return mailInstance;
     },
   };
@@ -52,16 +55,16 @@ const sendInBlue = async () => {
         .setSubject(data.title)
         .setHtmlContent(data.imageUrl)
         .setRecipients([{ name: data.username, email: data.user_email }])
-        .built();
+        .build();
 
       return await mailer
         .sendTransacEmail(currentMail)
         .then((d) => {
-          console.log(`API called successfully. Returned data: ${JSON.stringify(d)}`);
+          console.log(`Email successfully sent.`);
           return data;
         })
         .catch((err) => {
-          console.log(err);
+          console.log(`Email unable to be sent.`);
           return false;
         });
     },
