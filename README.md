@@ -8,3 +8,7 @@ Team Overview:
 - Joseph Petrillo
 - Jack Bisceglia
 - Siddharth Raju
+
+## How To Run
+
+`docker compose -p letsthink up`
