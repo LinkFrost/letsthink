@@ -70,7 +70,7 @@ app.get("/auth/refresh", async (req, res) => {
         path: "/auth",
       })
       .set("Authorization", "Bearer " + accessToken)
-      .set("Access-Control-Allow-Origin", "http://localhost:3000")
+      .set("Access-Control-Allow-Origin", process.env.ORIGIN)
       .status(200)
       .send({ success: "Generated new access token" });
   });

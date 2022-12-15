@@ -111,7 +111,7 @@ const fetchRoomsByUser = async (id: string) => {
 const fetchUser = async (user_id: string) => {
   const users = await mongoCollectionUsers.find({ id: user_id }).toArray();
 
-  return users[0];
+  return users[0] ?? undefined;
 };
 
 app.get("/query/rooms/:room_id", async (req, res) => {
@@ -144,6 +144,10 @@ app.get("/query/users/:user_id", async (req, res) => {
   try {
     const { user_id } = req.params;
     const user = await fetchUser(user_id);
+
+    if (!user) {
+      return res.status(400).send({ error: `User with id ${user_id} does not exist!` });
+    }
 
     publishHTTPEvent(eventBusChannel, 200);
     return res.status(200).send(user);
