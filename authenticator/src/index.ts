@@ -6,10 +6,16 @@ import z from "zod";
 import redis from "redis";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
-import type { UserData } from "./types/events.js";
+import type { HTTPRequest, UserData } from "./types/events.js";
+import { Channel } from "amqplib";
 
 const SECRET = process.env.JWT_ACCESS_SECRET as string;
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET as string;
+
+const publishHTTPEvent = (eventBus: Channel, code: number) => {
+  const event: HTTPRequest = { key: "HTTPRequest", data: { status: code } };
+  eventBus.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+};
 
 if (!SECRET || !REFRESH_SECRET) {
   throw new Error("One or more JWT environment variables missing!");
@@ -72,8 +78,8 @@ app.get("/auth/refresh", async (req, res) => {
 
 app.post("/auth/login", async (req, res) => {
   const reqBody = z.object({
-    email: z.string(),
-    password: z.string(),
+    email: z.string().email(),
+    password: z.string().min(8).max(128),
   });
 
   try {

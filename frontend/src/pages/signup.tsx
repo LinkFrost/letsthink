@@ -1,4 +1,4 @@
-import { FormEvent, useState, ChangeEvent } from "react";
+import { useState, ChangeEvent, FormEventHandler } from "react";
 import Head from "next/head";
 import Spinner from "../components/other/Spinner";
 import { z } from "zod";
@@ -35,9 +35,9 @@ const validateForm = (form: FormType): FormError => {
     // parse sign up form
     z.object({
       email: z.string().email(),
-      username: z.string().min(3).max(20),
-      password: z.string().min(3).max(20),
-      confirmPassword: z.string().min(3).max(20),
+      username: z.string().min(3).max(24),
+      password: z.string().min(8).max(128),
+      confirmPassword: z.string().min(8).max(128),
     })
       .superRefine(({ confirmPassword, password }, ctx) => {
         if (confirmPassword !== password) {
@@ -75,7 +75,7 @@ export default function SignUp<NextPage>() {
 
   const handleFormChange = (e: ChangeEvent<HTMLInputElement>, field: FormFields) => setForm({ ...form, [field]: e.target.value });
 
-  const handleSubmit = async (e: FormEvent<HTMLButtonElement>) => {
+  const handleSubmit: FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
 
     // Validate Login Form and Set Errors

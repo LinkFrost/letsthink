@@ -2,8 +2,13 @@ import initRabbit from "./utils/initRabbit.js";
 import initExpress from "./utils/initExpress.js";
 import initMongo from "./utils/initMongo.js";
 import { WithId, ObjectId } from "mongodb";
-
 import type { MessageModerated, MessageVoted, PollVoted, RoomCreated, RoomExpired, UserCreated, HTTPRequest } from "./types/events.js";
+import { Channel } from "amqplib";
+
+const publishHTTPEvent = (eventBus: Channel, code: number) => {
+  const event: HTTPRequest = { key: "HTTPRequest", data: { status: code } };
+  eventBus.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+};
 
 const { mongoCollection } = await initMongo();
 
@@ -32,7 +37,7 @@ try {
   console.log(e);
 }
 
-const { eventBusChannel, confirmChannel } = await initRabbit("site-health", [
+const { eventBusChannel } = await initRabbit("site-health", [
   "RoomCreated",
   "RoomExpired",
   "MessageVoted",
@@ -176,7 +181,8 @@ const fetchSiteHealthData = async () => {
 
 app.get("/site-health", async (req, res) => {
   const siteHealthData: SiteHealthData = await fetchSiteHealthData();
-  res.send({
+  publishHTTPEvent(eventBusChannel, 200);
+  res.status(200).send({
     totalRooms: siteHealthData.totalRooms,
     activeRooms: siteHealthData.activeRooms,
     expiredRooms: siteHealthData.expiredRooms,

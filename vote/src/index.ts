@@ -2,9 +2,13 @@ import initRabbit from "./utils/initRabbit.js";
 import initPostgres from "./utils/initPostgres.js";
 import initExpress from "./utils/initExpress.js";
 import z from "zod";
-import type { PollVoted, MessageVoted, RoomCreated, RoomExpired, MessageCreated, PollCreated } from "./types/events.js";
+import type { PollVoted, MessageVoted, RoomCreated, RoomExpired, MessageCreated, PollCreated, HTTPRequest } from "./types/events.js";
+import { Channel } from "amqplib";
 
-// initialize rabbitmq, postgres, and express
+const publishHTTPEvent = (eventBus: Channel, code: number) => {
+  const event: HTTPRequest = { key: "HTTPRequest", data: { status: code } };
+  eventBus.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+};
 
 const { eventBusChannel } = await initRabbit("vote", ["PollCreated", "MessageCreated", "RoomCreated", "RoomExpired"]);
 const { query } = initPostgres("vote-db");
@@ -69,6 +73,7 @@ app.post("/messages", async (req, res) => {
     try {
       reqBody.parse(req.body);
     } catch (err) {
+      publishHTTPEvent(eventBusChannel, 400);
       return res.status(400).send({ error: err });
     }
 
@@ -102,8 +107,10 @@ app.post("/messages", async (req, res) => {
     const event: MessageVoted = { key: "MessageVoted", data: eventData };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
+    publishHTTPEvent(eventBusChannel, 200);
     return res.status(200).send(eventData);
   } catch (err) {
+    publishHTTPEvent(eventBusChannel, 500);
     return res.status(500).send({ error: err });
   }
 });
@@ -118,6 +125,7 @@ app.post("/polls", async (req, res) => {
     try {
       reqBody.parse(req.body);
     } catch (err) {
+      publishHTTPEvent(eventBusChannel, 400);
       return res.status(400).send({ error: err });
     }
 
@@ -151,8 +159,10 @@ app.post("/polls", async (req, res) => {
     const event: PollVoted = { key: "PollVoted", data: eventData };
     eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
+    publishHTTPEvent(eventBusChannel, 200);
     return res.status(200).send(eventData);
   } catch (err) {
+    publishHTTPEvent(eventBusChannel, 500);
     return res.status(500).send({ error: err });
   }
 });
