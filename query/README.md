@@ -144,7 +144,3 @@ This service has three endpoints. One endpoint to get the data that is relevant 
 ## How to Run
 
 To run this service, run `npm install` and `npm run dev`. To build the typescript, you can use the `npm run build` command.
-
-## Exceeding
-
-I learned how to use MongoDB for the purpose of this project and have now become familiar with the setup and integration of MongoDB instances. This includes the setup and CRUD operations related to various databases, collections, and documents.
