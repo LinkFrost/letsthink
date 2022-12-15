@@ -1,36 +1,103 @@
-This is where the frontend of our application lives. Each of us have created at least two React components.
+# Frontend Service
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## Owners
+Ashir Imran
 
-## Getting Started
+**GitHub:** [LinkFrost](https://github.com/LinkFrost)
 
-First, run the development server:
+Jack Bisceglia
 
-```bash
-npm run dev
-# or
-yarn dev
+**GitHub:** [jackbisceglia](https://github.com/jackbisceglia)
+
+Siddharth Raju
+
+**GitHub:** [https://github.com/sid2033](https://github.com/)
+
+Joe Petrillo
+
+**GitHub:** [](https://github.com/joepetrillo))
+
+---
+
+## Technologies
+
+- React
+- TypeScript
+- Next.js
+- TailwindCSS
+- Zod
+
+## Description
+
+The frontend service is the client side entry point for our project. The user uses this service to interact with all of our microservices. This provides all the basic interfaces we have, such as: signup, login, room creation, polls, message boards, etc. We use React alongside a popular React framework, Next.js, which allows us to simplify the routing developer experience, using Next's built-in file-based directory system in `src/pages`. This is fully fledged with authentication to make the app secure and robust from end to end.
+
+## Interactions
+
+The frontend interacts with nearly all of our microservices to peform the various operations throughout the lifecycle of the application. This model demonstrates the power, scalability and flexibility of the microservice architecture.
+
+## Endpoints
+- GET `<QueryService>/query/rooms/:room_id`
+- GET `<QueryService>/query/rooms/user/:user_id`
+- POST `<RoomsService>/rooms`
+json
+```js
+{
+  "user_id": string;
+  "title": string;
+  "about": string;
+  "room_type": "message" | "poll";
+  "duration": number;
+}
 ```
+- POST `<PollsService>/polls`
+json
+```js
+{
+  "room_id": string;
+  "poll_options": poll_options[] {
+    "title": string (Max 60 characters),
+    "position": number;
+}
+```
+- POST `<MessagesService>/messages`
+json
+```js
+{
+  "room_id": string;
+  "room_id": string; (Max 150 characters)
+}
+```
+- POST `<VoteService>/messages`
+json
+```js
+{
+  "message_id": string;
+  "room_id": string;
+}
+```
+- POST `<VoteService>/polls`
+json
+```js
+{
+  "option_id": string;
+  "room_id": string;
+}
+```
+-POST `<AuthService>/auth/login`
+```js
+{
+ "email": string;
+ "password": string;
+}
+```
+- POST `<AuthService>/auth/refresh`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## How To Run
+2. run `npm install` to install dependencies
+3. run `npm run dev` to boot the dev server
+4. If you'd like to build the typescript, you can use the `npm run build` command, and find the output in the `/build` directory.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Exceeding Aspects
+I'd say the frontend is considered exceeding. The first point would be that we have implemented a full, end to end authentication system using JSON Web Tokens. We've made sure to avoid XSS attacks commonly caused by local storage, and CSRF attacks commonly caused by storing only cookies, by using opaque refresh tokens along with short-lived JWTs, alongside a refresh token intervals. 
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+In addition, we've implemented every single aspect of the client side application very thoroughly. Message Boards and Polls update live every 2 seconds with new results. Our styling is thorough and pleasant, and we've taken a serious interest in designing a good UX.
