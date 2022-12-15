@@ -37,19 +37,7 @@ interface RoomVisualized {
 
 ## Endpoints
 
-It has one test endpoint to check if the service is working.
-
-### `/visualizer`
-
-**Method**: GET
-
-**URL Params**: None
-
-**Body**:
-
-```js
-"Viz Service Running";
-```
+No endpoints for this service.
 
 ## How to Run
 
