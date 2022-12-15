@@ -6,6 +6,13 @@
 
 ---
 
+## Technologies
+
+- Typescript: main service code
+- SendInBlue: email sending
+- MongoDB: data persistence
+- RabbitMQ (via amqpblib): event bus
+
 ## Description
 
 The email service is responsible for dispatching emails to room owners following its' expiration. When a room has been active for the duration in which the owner has chosen, the email service will be listening for a "RoomVisualized" event. On receiving this event, the service breaks down the event data, and reformats it as an email, including room title, and a visualization of the room's data. The email service then fires an email to the owner's email using the SendInBlue email API.
