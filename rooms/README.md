@@ -64,7 +64,3 @@ interface requestBody {
 ## How To Run
 
 To run this service, run `npm install` and `npm run dev`. To build the typescript, you can use the `npm run build` command.
-
-## Exceeding
-
-After the base functionality was finished in this service, I went back to ensure I was used types as much as I could as well as doing proper error handling (error codes, try/catch blocks, etc). I also used a type validator (zod) to ensure the incoming body was in the expected shape. Lastly, I created three helper functions to initialize the event bus, postgres connection, and express server. These were very helpful across the rest of our services.
