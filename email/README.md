@@ -28,7 +28,7 @@ The email service listens for only one event: "RoomVisualized". When this is rec
 }
 ```
 
-This is the main data persistence for this service, so that we haev a wholly accurate log of user visualizations and emails to which they are tied.
+This is the main data persistence for this service, so that we have a wholly accurate log of user visualizations and emails to which they are tied.
 
 ## Endpoints
 
