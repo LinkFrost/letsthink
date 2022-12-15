@@ -68,17 +68,32 @@ app.post("/messages", async (req, res) => {
       return res.status(400).send({ error: `Room with id ${room_id} does not exist or is expired!` });
     }
 
-    const queryText = "INSERT INTO messages(room_id, content) VALUES($1, $2) RETURNING *";
-    const queryValues = [room_id, content];
+    const moderatorRes = await fetch("http://moderator:4004/moderate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: content }),
+    });
 
-    // Create message in database and send it through the event bus
-    const result = await pgClient.query(queryText, queryValues);
+    const moderatorData = await moderatorRes.json();
 
-    const event: MessageCreated = { key: "MessageCreated", data: result.rows[0] };
-    eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+    if (moderatorData.status === "accepted") {
+      const queryText = "INSERT INTO messages(room_id, content) VALUES($1, $2) RETURNING *";
+      const queryValues = [room_id, content];
 
-    res.status(200).json(result.rows[0]);
+      // Create message in database and send it through the event bus
+      const result = await pgClient.query(queryText, queryValues);
+
+      const event: MessageCreated = { key: "MessageCreated", data: result.rows[0] };
+      eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+
+      res.status(200).json({ status: moderatorData.status, data: result.rows[0] });
+    } else {
+      res.status(200).json({ status: moderatorData.status, data: [...moderatorData.invalidWords] });
+    }
   } catch (err) {
+    console.log(err);
     res.status(500).json({ error: err });
   }
 });
