@@ -2,7 +2,13 @@ import initRabbit from "./utils/initRabbit.js";
 import initPostgres from "./utils/initPostgres.js";
 import initExpress from "./utils/initExpress.js";
 import z from "zod";
-import type { MessageCreated } from "./types/events.js";
+import type { HTTPRequest, MessageCreated } from "./types/events.js";
+import { Channel } from "amqplib";
+
+const publishHTTPEvent = (eventBus: Channel, code: number) => {
+  const event: HTTPRequest = { key: "HTTPRequest", data: { status: code } };
+  eventBus.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+};
 
 const queue = "messages";
 
@@ -52,7 +58,7 @@ eventBusChannel.consume(queue, async (message) => {
 app.post("/messages", async (req, res) => {
   const reqBody = z.object({
     room_id: z.string(),
-    content: z.string(),
+    content: z.string().min(1).max(150),
   });
 
   try {
@@ -68,17 +74,34 @@ app.post("/messages", async (req, res) => {
       return res.status(400).send({ error: `Room with id ${room_id} does not exist or is expired!` });
     }
 
-    const queryText = "INSERT INTO messages(room_id, content) VALUES($1, $2) RETURNING *";
-    const queryValues = [room_id, content];
+    const moderatorRes = await fetch("http://moderator:4004/moderate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: content }),
+    });
 
-    // Create message in database and send it through the event bus
-    const result = await pgClient.query(queryText, queryValues);
+    const moderatorData = await moderatorRes.json();
 
-    const event: MessageCreated = { key: "MessageCreated", data: result.rows[0] };
-    eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+    if (moderatorData.status === "accepted") {
+      const queryText = "INSERT INTO messages(room_id, content) VALUES($1, $2) RETURNING *";
+      const queryValues = [room_id, content];
 
-    res.status(200).json(result.rows[0]);
+      // Create message in database and send it through the event bus
+      const result = await pgClient.query(queryText, queryValues);
+
+      const event: MessageCreated = { key: "MessageCreated", data: result.rows[0] };
+      eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+      publishHTTPEvent(eventBusChannel, 200);
+
+      res.status(200).json({ status: moderatorData.status, data: result.rows[0] });
+    } else {
+      publishHTTPEvent(eventBusChannel, 200);
+      res.status(200).json({ status: moderatorData.status, data: [...moderatorData.invalidWords] });
+    }
   } catch (err) {
+    publishHTTPEvent(eventBusChannel, 500);
     res.status(500).json({ error: err });
   }
 });

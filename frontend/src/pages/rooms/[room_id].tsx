@@ -1,9 +1,8 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useContext, useState, useEffect, useRef, useMemo } from "react";
-import { AuthContext } from "../../utils/auth/auth";
+import { useState, useEffect, useRef, useMemo, FormEvent } from "react";
 import Spinner from "../../components/other/Spinner";
-import { PollOptionType, PollOptionColor, SubmissionStatus, MessageType, RoomDataType } from "../../utils/types/types";
+import { PollOptionType, SubmissionStatus, MessageType, RoomDataType } from "../../utils/types/types";
 import { MessagesService, QueryService, VoteService } from "../../utils/services";
 import Checkmark from "../../components/other/Checkmark";
 import { pollOptionColors } from "../../utils/pollOptionColors";
@@ -21,6 +20,20 @@ export function relativeTimeSince(date: string) {
     return formatter.format(-Math.floor(diff / (1000 * 60)), "minutes");
   } else {
     return formatter.format(-Math.floor(diff / 1000), "seconds");
+  }
+}
+
+export function relativeTimeToExpire(date: string) {
+  const formatter = new Intl.RelativeTimeFormat("en");
+  const diff = new Date(date).valueOf() - new Date().valueOf();
+  console.log(diff / (1000 * 60));
+
+  if (Math.floor(diff / (1000 * 60)) > 60) {
+    return formatter.format(Math.floor(diff / (1000 * 60) / 60), "hours");
+  } else if (Math.floor(diff / 1000) > 60) {
+    return formatter.format(Math.floor(diff / (1000 * 60)), "minutes") + `, ${Math.floor((diff % (1000 * 60)) / 1000)} seconds`;
+  } else {
+    return formatter.format(Math.floor(diff / 1000), "seconds");
   }
 }
 
@@ -74,7 +87,7 @@ const Message = (props: { id: string; content: string; create_date: string; vote
 
   return (
     <div className="flex flex-col justify-between rounded-xl border-[1px] border-neutral-700 bg-neutral-800 p-6 shadow-lg shadow-neutral-900">
-      <p className="pb-6">{props.content}</p>
+      <p className="break-words pb-6">{props.content}</p>
       <div className="flex items-center justify-between border-t-[1px] border-neutral-700 pt-6">
         <button
           disabled={Boolean(liked) || props.roomExpired}
@@ -91,7 +104,6 @@ const Message = (props: { id: string; content: string; create_date: string; vote
 };
 
 export default function RoomPage() {
-  const session = useContext(AuthContext);
   const router = useRouter();
   const room_id = router.query.room_id as string;
 
@@ -102,11 +114,13 @@ export default function RoomPage() {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [messageLoading, setMessageLoading] = useState(false);
   const [messageContent, setMessageContent] = useState("");
+  const [timeLeft, setTimeLeft] = useState<string>("");
   const isExpired = useMemo(() => roomData?.expired ?? false, [roomData?.expired]);
   const interval = useRef<NodeJS.Timer>();
 
   useEffect(() => {
     if (isExpired) {
+      setError({ color: "", message: "", status: "" });
       clearInterval(interval.current);
     }
   }, [isExpired]);
@@ -135,6 +149,8 @@ export default function RoomPage() {
             if (data.messages) {
               setMessages(data.messages.reverse());
             }
+
+            setTimeLeft("Expires " + relativeTimeToExpire(data.expire_date));
 
             return data;
           }
@@ -183,13 +199,15 @@ export default function RoomPage() {
       setPollVote(id);
 
       window.sessionStorage.setItem(room_id, id);
+      setError({ color: "", message: "", status: "" });
     }
   };
 
-  const createMessage = async () => {
+  const createMessage = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setMessageLoading(true);
 
-    const res = await fetch(`${MessagesService}/messages`, {
+    const messageRes = await fetch(`${MessagesService}/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -200,15 +218,21 @@ export default function RoomPage() {
       }),
     });
 
-    const data = await res.json();
+    const messageData = await messageRes.json();
 
-    if (data.error) {
+    if (messageData.error) {
       setError({ status: "error", color: "red", message: "Error posting message, please try again." });
     }
 
-    if (res.ok) {
-      setMessages([{ ...data, votes: 0 }, ...messages]);
+    if (messageRes.ok) {
+      if (messageData.status === "accepted") {
+        setMessages([{ ...messageData.data, votes: 0 }, ...messages]);
+        setError({ color: "", message: "", status: "" });
+      } else {
+        setError({ status: "error", color: "red", message: `Your message contained the following banned words: ${messageData.data.join(", ")}` });
+      }
     }
+
     setMessageLoading(false);
     setMessageContent("");
   };
@@ -235,6 +259,7 @@ export default function RoomPage() {
       const newMessages = messages.map((cur) => (cur.id === id ? { ...cur, votes: data.votes } : cur));
       setMessages(newMessages);
       window.sessionStorage.setItem(id, "1");
+      setError({ color: "", message: "", status: "" });
     }
   };
 
@@ -250,9 +275,10 @@ export default function RoomPage() {
           <Spinner shade={900} size={6} />
         ) : (
           <div className="flex w-full flex-col items-center justify-center text-white">
-            <div className="mb-10 flex max-w-screen-md flex-col items-center gap-10 text-center">
+            <div className="mb-10 flex max-w-screen-md flex-col items-center gap-3 text-center">
               <h1 className="text-5xl text-yellow-400">{roomData.title}</h1>
               <p>{roomData.about}</p>
+              {!isExpired && <p>{timeLeft}</p>}
               {error.status === "error" && <p className="px-3 text-red-500">{error.message}</p>}
               {isExpired && (
                 <p className="text-white-400 rounded-lg bg-red-400 px-4 py-1 text-center text-neutral-800">
@@ -275,21 +301,22 @@ export default function RoomPage() {
                   />
                 ))}
               {!isExpired && roomData.room_type === "message" && (
-                <div className="flex flex-col items-center justify-center">
+                <form onSubmit={(e) => createMessage(e)} className="flex flex-col items-center justify-center">
                   <textarea
                     className="mt-3 block w-full rounded-lg p-2 text-black"
                     placeholder="Enter your message here"
                     value={messageContent}
                     onChange={(e) => setMessageContent(e.target.value)}
+                    minLength={1}
+                    maxLength={150}
                   />
                   <button
                     disabled={messageLoading || !messageContent.length}
-                    onClick={createMessage}
                     className="w-30 mt-5 mb-12 flex w-full justify-center rounded-xl bg-yellow-400 p-2 text-lg text-black hover:bg-yellow-200 disabled:bg-neutral-400"
                   >
                     {messageLoading ? <Spinner shade={900} size={6} /> : "Post Message"}
                   </button>
-                </div>
+                </form>
               )}
             </div>
             <div className="grid w-full max-w-screen-xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,7 +1,11 @@
 import initRabbit from "./utils/initRabbit.js";
 import initMongo from "./utils/initMongo.js";
 import initExpress from "./utils/initExpress.js";
-import { auth } from "./utils/initExpress.js";
+
+const publishHTTPEvent = (eventBus: Channel, code: number) => {
+  const event: HTTPRequest = { key: "HTTPRequest", data: { status: code } };
+  eventBus.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
+};
 
 import type {
   MessageModerated,
@@ -13,7 +17,9 @@ import type {
   RoomVisualized,
   MessageCreated,
   UserCreated,
+  HTTPRequest,
 } from "./types/events.js";
+import { Channel } from "amqplib";
 
 const { eventBusChannel } = await initRabbit("query", [
   "RoomCreated",
@@ -113,8 +119,10 @@ app.get("/query/rooms/:room_id", async (req, res) => {
     const { room_id } = req.params;
     const room = await fetchRoom(room_id);
 
+    publishHTTPEvent(eventBusChannel, 200);
     return res.status(200).send(room);
   } catch (err) {
+    publishHTTPEvent(eventBusChannel, 500);
     return res.status(500).send({ error: err });
   }
 });
@@ -124,8 +132,10 @@ app.get("/query/rooms/user/:user_id", async (req, res) => {
     const { user_id } = req.params;
     const rooms = await fetchRoomsByUser(user_id);
 
+    publishHTTPEvent(eventBusChannel, 200);
     return res.status(200).send(rooms);
   } catch (err) {
+    publishHTTPEvent(eventBusChannel, 500);
     res.status(500).send({ error: err });
   }
 });
@@ -135,8 +145,10 @@ app.get("/query/users/:user_id", async (req, res) => {
     const { user_id } = req.params;
     const user = await fetchUser(user_id);
 
+    publishHTTPEvent(eventBusChannel, 200);
     return res.status(200).send(user);
   } catch (err) {
+    publishHTTPEvent(eventBusChannel, 500);
     res.status(500).send({ error: err });
   }
 });
