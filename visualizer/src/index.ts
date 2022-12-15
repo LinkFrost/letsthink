@@ -130,7 +130,7 @@ eventBusChannel.consume(queue, async (message) => {
         // Publish Visualization
         const event: RoomVisualized = {
           key: "RoomVisualized",
-          data: { id: id, room_id: id, title: resData.title, user_email: userData.email, username: userData.id, imageUrl: imageUrl },
+          data: { id: id, room_id: id, title: resData.title, user_email: userData.email, username: userData.username, imageUrl: imageUrl },
         };
         eventBusChannel.publish("event-bus", event.key, Buffer.from(JSON.stringify(event)));
 
