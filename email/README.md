@@ -43,3 +43,8 @@ This service only partakes in communications from the event-bus, and does not re
 2. run `npm install` to install dependencies
 3. run `npm run dev` to boot the dev server
 4. If you'd like to build the typescript, you can use the `npm run build` command, and find the output in the `/build` directory.
+
+## Exceeding Aspects
+
+1. I think the fact that this service is a fully integrated email service, as opposed to something simple using nodemailer or a similar smtp library, would categorize the service as something that is exceeding. It is integrated with SendInBlue, which ensures that our emails are sent from verified servers, and error handling with regards to smtp communication is well handled. We've attached a verified domain so that all requests come from a safe email, `noreply@letsth.ink`.
+2. Additionally, I think the code is well written, and has been refactored many times over to try to ensure peak code quality, readability, and by extension, documentation.
