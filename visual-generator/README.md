@@ -99,10 +99,3 @@ interface pollRequestBody {
 ## How to Run
 
 To install requirements, run `pip install --no-cache-dir --upgrade -r ./requirements.txt`. To then run the visual-generator service, run `uvicorn src.main:app --reload --host 0.0.0.0 --port 4010`.
-
-## Exceeding
-
-For the exceeding section, this functionality of the visualization is split into two services. This is visual-generator and the other one is visualizer. This service is written in python and is responsible for actually generating the visualization image and then uploading it to generate the URL. This is due to the better visualization capability offered by libraries in python. The other service is responsible for mostly event logic and database logic.
-
-## Exceeding - Jack
-In addition to what Sid has mentioned, I think that the use of Amazon Web Services (AWS) with S3 makes this service above and beyond. Rather than just storing in the database and sending over HTTP in base64, we upload every single visualization to an S3 bucket, which provides us for a public URL for each visualization. The email service eventually uses this URL to attach the images in emails. I would say that this significantly improves the User Experience, and is exceeding.
