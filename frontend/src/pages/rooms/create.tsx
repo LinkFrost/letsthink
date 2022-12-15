@@ -166,7 +166,7 @@ export default function Create() {
           <Spinner />
         ) : (
           session.isAuth && (
-            <div className="flex  max-w-2xl flex-col justify-center text-white ">
+            <div className="flex max-w-2xl flex-col justify-center text-white ">
               <h1 className="mb-3 text-5xl text-yellow-500">Create Room</h1>
 
               <form className="flex flex-col items-start gap-1" autoComplete="off">
