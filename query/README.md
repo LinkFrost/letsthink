@@ -6,7 +6,7 @@
 
 ## Description
 
-The query service is responsible for storing data related to mainly rooms. This data is used in the front-end as what the user will interact with. This service uses MongoDB to store all this relevant data.
+The query service is responsible for storing data related to mainly users and rooms. This data is used in the front-end as what the user will interact with. This service uses MongoDB to store all this relevant data.
 
 ## Interactions
 
