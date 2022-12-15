@@ -1,32 +1,29 @@
 import Head from "next/head";
 import { ChangeEvent, FormEvent, useContext, useRef, useState } from "react";
-import { AuthContext } from "../../utils/auth/auth";
 import Spinner from "../../components/other/Spinner";
 import { SubmissionStatus } from "../../utils/types/types";
 import { PollsService, RoomsService } from "../../utils/services";
 import Router from "next/router";
 import { useProtectedPageSession } from "../../utils/hooks/useProtectedPageSession";
 
-type FormFields = "title" | "about" | "type" | "duration" | "poll_options";
+type FormFields = "title" | "about" | "type" | "poll_options";
 type FormType = Record<FormFields, string | number>;
 
 const defaultForm: FormType = {
   title: "",
   about: "",
   type: "",
-  duration: "",
   poll_options: "",
 };
 
 export default function Create() {
-  // const session = useContext(AuthContext);
   const session = useProtectedPageSession();
-  console.log(session);
 
   const title = useRef() as React.MutableRefObject<HTMLInputElement>;
   const [about, setAbout] = useState<string>("");
   const [type, setType] = useState<string>("");
-  const [duration, setDuration] = useState<number>(0);
+  const [minutes, setMinutes] = useState<number>(5);
+  const [hours, setHours] = useState<number>(0);
   const [pollOptions, setPollOptions] = useState<{ title: string }[]>([{ title: "" }, { title: "" }]);
 
   const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>({ color: "", message: "", status: "" });
@@ -42,10 +39,6 @@ export default function Create() {
 
     if (!type) {
       errors["about"] = "Need to select a room type!";
-    }
-
-    if (!duration) {
-      errors["duration"] = "Need to enter a duration!";
     }
 
     if (type === "poll") {
@@ -85,6 +78,8 @@ export default function Create() {
       setFormErrors({ ...defaultForm, ...errors });
       return;
     }
+
+    const duration = minutes + hours * 60;
 
     const room = {
       user_id: (session.userData as any).id,
@@ -143,14 +138,12 @@ export default function Create() {
         if (pollResData.success) {
           setTimeout(() => {
             setCreateLoading(false);
-            // window.location.href = `/rooms/${room_id}`;
             Router.push(`/rooms/${room_id}`);
           }, 2500);
         }
       } else {
         setTimeout(() => {
           setCreateLoading(false);
-          // window.location.href = `/rooms/${room_id}`;
           Router.push(`/rooms/${room_id}`);
         }, 2500);
       }
@@ -169,12 +162,12 @@ export default function Create() {
           <Spinner />
         ) : (
           session.isAuth && (
-            <div className="flex  max-w-2xl flex-col justify-center text-white">
-              <h1 className="mb-3 text-4xl text-yellow-500">Create Room</h1>
+            <div className="flex max-w-2xl flex-col justify-center text-white ">
+              <h1 className="mb-3 text-5xl text-yellow-500">Create Room</h1>
 
               <form className="flex flex-col items-start gap-1" autoComplete="off">
                 <label htmlFor="title">
-                  <p className="text-lg">Title:</p>
+                  <p className="text-2xl">Title:</p>
                 </label>
                 <input
                   id="name"
@@ -188,7 +181,7 @@ export default function Create() {
                 <p className="text-xs text-red-400">{formErrors.title}</p>
 
                 <label htmlFor="about">
-                  <p className="text-lg ">About:</p>
+                  <p className="text-2xl">About:</p>
                 </label>
                 <textarea
                   onChange={(e) => setAbout(e.target.value)}
@@ -202,32 +195,55 @@ export default function Create() {
                 <p className="text-xs text-red-400">{formErrors.about}</p>
 
                 <label htmlFor="duration">
-                  <p className="text-lg">Duration (min):</p>
+                  <p className="text-2xl">Duration:</p>
                 </label>
-                <input
-                  onChange={(e) => setDuration(parseInt(e.target.value))}
-                  id="duration"
-                  className="w-16 rounded-md px-2 py-[0.125rem] text-black"
-                  value={duration}
-                  type="number"
-                ></input>
-                <p className="text-xs text-red-400">{formErrors.duration}</p>
+                <div className="flex gap-2">
+                  <label htmlFor="hours">
+                    <p className="text-lg">Hours: </p>
+                  </label>
+                  <select className="rounded-md px-2 py-[0.125rem] text-black" name="hours" id="hours" onChange={(e) => setHours(parseInt(e.target.value))}>
+                    <option value={1}>0</option>
+                    <option value={1}>1</option>
+                    <option value={2}>2</option>
+                    <option value={3}>3</option>
+                    <option value={4}>4</option>
+                    <option value={5}>5</option>
+                    <option value={6}>6</option>
+                  </select>
+
+                  <label htmlFor="minutes">
+                    <p className="text-lg">Minutes: </p>
+                  </label>
+                  <select
+                    className="rounded-md px-2 py-[0.125rem] text-black"
+                    name="minutes"
+                    id="minutes"
+                    onChange={(e) => setMinutes(parseInt(e.target.value))}
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={30}>30</option>
+                    <option value={40}>40</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
 
                 <div className="flex items-center gap-2">
                   <label>
-                    <p className="text-lg ">Type:</p>
+                    <p className="text-2xl">Type:</p>
                   </label>
                   <div className="flex gap-4">
                     <div className="flex gap-2">
                       <input onChange={(e) => setType(e.target.value)} type="radio" id="messages" name="type" value="message"></input>
                       <label htmlFor="messages">
-                        <p className="text-md">Messages</p>
+                        <p className="text-lg">Messages</p>
                       </label>
                     </div>
                     <div className="flex gap-2">
                       <input onChange={(e) => setType(e.target.value)} type="radio" id="polls" name="type" value="poll"></input>
                       <label htmlFor="polls">
-                        <p className="text-md">Poll</p>
+                        <p className="text-lg">Poll</p>
                       </label>
                     </div>
                   </div>
