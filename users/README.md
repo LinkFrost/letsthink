@@ -69,3 +69,9 @@ response:
 2. run `npm install` to install dependencies
 3. run `npm run dev` to boot the dev server
 4. If you'd like to build the typescript, you can use the `npm run build` command, and find the output in the `/build` directory.
+
+## Exceeding Aspects
+
+1. The primary thing that I would consider exceeding about this is the role it has in providing a highly secure application. All user data comes through this service, is properly sanitized (with zod which I'll get to after), and then secure data is hashed using a respected password algorithim, Argon2. This directly contributes to our application being secure and safe for users to use.
+2. As aforementioned, all data is sanitized on input using a type validation library called Zod. As typescript is only a dev dependency, and can not establish a type contract between the client and server, Zod helps to ensure that incoming data is sanitary and valid according the schema I define, prior to its processing.
+3. Lastly I think the code is very well written and documented, and easily modifiable for future development.
