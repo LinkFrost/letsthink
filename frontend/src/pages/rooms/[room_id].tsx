@@ -1,9 +1,8 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useContext, useState, useEffect, useRef, useMemo, FormEvent } from "react";
-import { AuthContext } from "../../utils/auth/auth";
+import { useState, useEffect, useRef, useMemo, FormEvent } from "react";
 import Spinner from "../../components/other/Spinner";
-import { PollOptionType, PollOptionColor, SubmissionStatus, MessageType, RoomDataType } from "../../utils/types/types";
+import { PollOptionType, SubmissionStatus, MessageType, RoomDataType } from "../../utils/types/types";
 import { MessagesService, QueryService, VoteService } from "../../utils/services";
 import Checkmark from "../../components/other/Checkmark";
 import { pollOptionColors } from "../../utils/pollOptionColors";
@@ -21,6 +20,20 @@ export function relativeTimeSince(date: string) {
     return formatter.format(-Math.floor(diff / (1000 * 60)), "minutes");
   } else {
     return formatter.format(-Math.floor(diff / 1000), "seconds");
+  }
+}
+
+export function relativeTimeToExpire(date: string) {
+  const formatter = new Intl.RelativeTimeFormat("en");
+  const diff = new Date(date).valueOf() - new Date().valueOf();
+  console.log(diff / (1000 * 60));
+
+  if (Math.floor(diff / (1000 * 60)) > 60) {
+    return formatter.format(Math.floor(diff / (1000 * 60) / 60), "hours");
+  } else if (Math.floor(diff / 1000) > 60) {
+    return formatter.format(Math.floor(diff / (1000 * 60)), "minutes") + `, ${Math.floor((diff % (1000 * 60)) / 1000)} seconds`;
+  } else {
+    return formatter.format(Math.floor(diff / 1000), "seconds");
   }
 }
 
@@ -91,7 +104,6 @@ const Message = (props: { id: string; content: string; create_date: string; vote
 };
 
 export default function RoomPage() {
-  const session = useContext(AuthContext);
   const router = useRouter();
   const room_id = router.query.room_id as string;
 
@@ -102,6 +114,7 @@ export default function RoomPage() {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [messageLoading, setMessageLoading] = useState(false);
   const [messageContent, setMessageContent] = useState("");
+  const [timeLeft, setTimeLeft] = useState<string>("");
   const isExpired = useMemo(() => roomData?.expired ?? false, [roomData?.expired]);
   const interval = useRef<NodeJS.Timer>();
 
@@ -136,6 +149,8 @@ export default function RoomPage() {
             if (data.messages) {
               setMessages(data.messages.reverse());
             }
+
+            setTimeLeft("Expires " + relativeTimeToExpire(data.expire_date));
 
             return data;
           }
@@ -263,6 +278,7 @@ export default function RoomPage() {
             <div className="mb-10 flex max-w-screen-md flex-col items-center gap-3 text-center">
               <h1 className="text-5xl text-yellow-400">{roomData.title}</h1>
               <p>{roomData.about}</p>
+              {!isExpired && <p>{timeLeft}</p>}
               {error.status === "error" && <p className="px-3 text-red-500">{error.message}</p>}
               {isExpired && (
                 <p className="text-white-400 rounded-lg bg-red-400 px-4 py-1 text-center text-neutral-800">
