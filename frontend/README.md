@@ -96,8 +96,3 @@ json
 2. run `npm install` to install dependencies
 3. run `npm run dev` to boot the dev server
 4. If you'd like to build the typescript, you can use the `npm run build` command, and find the output in the `/build` directory.
-
-## Exceeding Aspects
-I'd say the frontend is considered exceeding. The first point would be that we have implemented a full, end to end authentication system using JSON Web Tokens. We've made sure to avoid XSS attacks commonly caused by local storage, and CSRF attacks commonly caused by storing only cookies, by using opaque refresh tokens along with short-lived JWTs, alongside a refresh token intervals. 
-
-In addition, we've implemented every single aspect of the client side application very thoroughly. Message Boards and Polls update live every 2 seconds with new results. Our styling is thorough and pleasant, and we've taken a serious interest in designing a good UX.
