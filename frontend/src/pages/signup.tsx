@@ -129,7 +129,7 @@ export default function SignUp<NextPage>() {
       <main className="flex flex-col items-center justify-center">
         <div className="flex max-w-2xl flex-col justify-center text-white ">
           <h1 className="mb-3 text-5xl text-yellow-500">Sign Up</h1>
-          <form className="flex h-full flex-col gap-1">
+          <form className="flex h-full flex-col gap-1" onSubmit={handleSubmit}>
             {/* EMAIL */}
             <label className="text-2xl text-white" htmlFor="email">
               Email:
@@ -180,7 +180,6 @@ export default function SignUp<NextPage>() {
             <p className="text-xs text-red-400">{formErrors.confirmPassword}</p>
             <button
               disabled={signUpLoading}
-              onClick={(e) => handleSubmit(e)}
               className="mt-5 flex justify-center rounded-xl bg-white p-2 px-4 text-center text-lg text-black hover:bg-gray-300 disabled:bg-gray-50"
             >
               {signUpLoading ? <Spinner shade={900} size={6} /> : "Sign Up"}
