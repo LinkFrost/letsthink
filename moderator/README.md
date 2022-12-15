@@ -14,7 +14,7 @@
 
 ## Description
 
-The moderator service is responsible for moderating incoming messages. The general flow is the when the client posts a message, before the messages service continues down its standard path, it posts to the moderator service in order to check on moderation status. This is done via HTTP instead of async via RabbitMQ so that we can block our regular service lifecycle in the event of an invalid message being posted. For the sake of UX, we want to make sure that the user knows immediately that their message is invalid, so instead of letting this process async, we block user action until moderator has processed the message. In this event, it checks against a list of banned words in the database and returns the validity status, and the array of banned words used, if any.
+The moderator service is responsible for moderating incoming messages. The general flow is the when the client posts a message, before the messages service continues down its standard path, it posts to the moderator service in order to check on moderation status. This is done via HTTP instead of async via RabbitMQ so that we can block our regular service lifecycle in the event of an invalid message being posted. For the sake of UX, we want to make sure that the user knows immediately that their message is invalid, so instead of letting this process communicate async, we block user action until moderator has processed the message. In this event, it checks against a list of banned words in the database and returns the validity status, and the array of banned words used, if any.
 
 ## Interactions
 
@@ -62,7 +62,7 @@ json payload:
 
 response:
 
-```json
+```js
 {
     "status": "rejected" | "accepted",
     "invalidWords": [<array of banned words>]
