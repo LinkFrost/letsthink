@@ -40,6 +40,8 @@ None
 
 **Body**: None
 
+### Sample Response
+
 ```JSON
 
 {"Visualizer Listening": "Hello World"}

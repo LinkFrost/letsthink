@@ -26,7 +26,6 @@ export function relativeTimeSince(date: string) {
 export function relativeTimeToExpire(date: string) {
   const formatter = new Intl.RelativeTimeFormat("en");
   const diff = new Date(date).valueOf() - new Date().valueOf();
-  console.log(diff / (1000 * 60));
 
   if (Math.floor(diff / (1000 * 60)) > 60) {
     return formatter.format(Math.floor(diff / (1000 * 60) / 60), "hours");
@@ -122,6 +121,7 @@ export default function RoomPage() {
     if (isExpired) {
       setError({ color: "", message: "", status: "" });
       clearInterval(interval.current);
+      interval.current = undefined;
     }
   }, [isExpired]);
 
@@ -159,7 +159,7 @@ export default function RoomPage() {
 
       const firstFetch = await fetchRoom(room_id);
 
-      if (!firstFetch?.expired) {
+      if (!firstFetch?.expired && !interval.current) {
         interval.current = setInterval(async () => {
           if (document.hasFocus()) {
             fetchRoom(room_id);
@@ -168,7 +168,10 @@ export default function RoomPage() {
       }
     })();
 
-    return () => clearInterval(interval.current);
+    return () => {
+      clearInterval(interval.current);
+      interval.current = undefined;
+    };
   }, [room_id]);
 
   const votePoll = async (id: string) => {

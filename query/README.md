@@ -24,6 +24,8 @@ This service has three endpoints. One endpoint to get the data that is relevant 
 
 **Body**: None
 
+### Sample Response
+
 ```JSON
 {
     "_id": "6397f8e12132df282935b011",
@@ -62,6 +64,8 @@ This service has three endpoints. One endpoint to get the data that is relevant 
 **URL Params**: user_id
 
 **Body**: None
+
+### Sample Response
 
 ```JSON
 [
@@ -125,6 +129,8 @@ This service has three endpoints. One endpoint to get the data that is relevant 
 **URL Params**: user_id
 
 **Body**: None
+
+### Sample Response
 
 ```JSON
 {
