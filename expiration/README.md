@@ -37,7 +37,3 @@ interface RoomExpired {
 ## How To Run
 
 To run this service, run `npm install` and `npm run dev`. To build the typescript, you can use the `npm run build` command.
-
-## Exceeding
-
-I learned how to use Redis and how to set it up as a primary database. It is persistent and uses "appendonly" mode, which saves the data every second.
