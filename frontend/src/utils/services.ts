@@ -1,4 +1,4 @@
-const baseUrl = "http://api.letsth.ink";
+const baseUrl = "https://api.letsth.ink";
 
 export const RoomsService = `${baseUrl}:4001`;
 export const MessagesService = `${baseUrl}:4002`;
