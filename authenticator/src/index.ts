@@ -66,7 +66,7 @@ app.get("/auth/refresh", async (req, res) => {
       .cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: true,
+        sameSite: "none",
         path: "/",
       })
       .set("Authorization", "Bearer " + accessToken)
@@ -119,7 +119,7 @@ app.post("/auth/login", async (req, res) => {
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: true,
+        sameSite: "none",
         path: "/",
       })
       .send({ success: "Successfully authorized" });
