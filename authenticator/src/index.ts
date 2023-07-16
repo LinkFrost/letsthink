@@ -67,7 +67,7 @@ app.get("/auth/refresh", async (req, res) => {
         httpOnly: true,
         secure: true,
         sameSite: true,
-        path: "/auth",
+        path: "/",
       })
       .set("Authorization", "Bearer " + accessToken)
       .set("Access-Control-Allow-Origin", process.env.ORIGIN)
@@ -120,7 +120,7 @@ app.post("/auth/login", async (req, res) => {
         httpOnly: true,
         secure: true,
         sameSite: true,
-        path: "/auth",
+        path: "/",
       })
       .send({ success: "Successfully authorized" });
   } catch (err) {
