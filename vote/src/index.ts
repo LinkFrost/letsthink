@@ -63,7 +63,7 @@ eventBusChannel.consume("vote", async (message) => {
   eventBusChannel.ack(message);
 });
 
-app.post("/messages", async (req, res) => {
+app.post("/vote/messages", async (req, res) => {
   const reqBody = z.object({
     message_id: z.string(),
     room_id: z.string(),
@@ -115,7 +115,7 @@ app.post("/messages", async (req, res) => {
   }
 });
 
-app.post("/polls", async (req, res) => {
+app.post("/vote/polls", async (req, res) => {
   const reqBody = z.object({
     option_id: z.string(),
     room_id: z.string(),

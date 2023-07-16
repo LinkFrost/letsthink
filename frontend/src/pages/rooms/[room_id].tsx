@@ -175,7 +175,7 @@ export default function RoomPage() {
   }, [room_id]);
 
   const votePoll = async (id: string) => {
-    const res = await fetch(`${VoteService}/polls`, {
+    const res = await fetch(`${VoteService}/vote/polls`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -241,7 +241,7 @@ export default function RoomPage() {
   };
 
   const handleLike = async (id: string) => {
-    const res = await fetch(`${VoteService}/messages`, {
+    const res = await fetch(`${VoteService}/vote/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
