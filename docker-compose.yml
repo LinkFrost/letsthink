@@ -13,21 +13,22 @@ services:
       timeout: 30s
       retries: 10
 
-  frontend:
-    container_name: letsthink-frontend
-    build: "./frontend"
-    ports:
-      - 3000:3000
-    volumes:
-      - "./frontend/public:/usr/app/public"
-      - "./frontend/src:/usr/app/src"
-    depends_on:
-      event-bus:
-        condition: service_healthy
+  # frontend:
+  #   container_name: letsthink-frontend
+  #   build: "./frontend"
+  #   ports:
+  #     - 3000:3000
+  #   volumes:
+  #     - "./frontend/public:/usr/app/public"
+  #     - "./frontend/src:/usr/app/src"
+  #   depends_on:
+  #     event-bus:
+  #       condition: service_healthy
 
   rooms:
     container_name: letsthink-rooms
     build: "./rooms"
+    restart: always
     ports:
       - 4001:4001
     volumes:
@@ -61,6 +62,7 @@ services:
   messages:
     container_name: letsthink-messages
     build: "./messages"
+    restart: always
     ports:
       - 4002:4002
     volumes:
@@ -92,6 +94,7 @@ services:
   polls:
     container_name: letsthink-polls
     build: "./polls"
+    restart: always
     ports:
       - 4003:4003
     volumes:
@@ -125,6 +128,7 @@ services:
   moderator:
     container_name: letsthink-moderator
     build: "./moderator"
+    restart: always
     ports:
       - 4004:4004
     volumes:
@@ -144,10 +148,11 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
     ports:
       - 27030:27017
-  
+
   email:
     container_name: letsthink-email
     build: "./email"
+    restart: always
     ports:
       - 4005:4005
     volumes:
@@ -165,6 +170,7 @@ services:
   email-db:
     container_name: letsthink-email-db
     image: mongo:latest
+    restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
@@ -174,6 +180,7 @@ services:
   users:
     container_name: letsthink-users
     build: "./users"
+    restart: always
     ports:
       - 4006:4006
     volumes:
@@ -205,6 +212,7 @@ services:
   authenticator:
     container_name: letsthink-authenticator
     build: "./authenticator"
+    restart: always
     ports:
       - 4007:4007
     volumes:
@@ -228,6 +236,7 @@ services:
   expiration:
     container_name: letsthink-expiration
     build: "./expiration"
+    restart: always
     ports:
       - 4008:4008
     volumes:
@@ -256,6 +265,7 @@ services:
   site-health:
     container_name: letsthink-site-health
     build: "./site-health"
+    restart: always
     ports:
       - 4009:4009
     volumes:
@@ -270,6 +280,7 @@ services:
   site-health-db:
     container_name: letsthink-site-health-db
     image: mongo:latest
+    restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
@@ -279,6 +290,7 @@ services:
   visualizer:
     container_name: letsthink-visualizer
     build: "./visualizer"
+    restart: always
     ports:
       - 4013:4013
     volumes:
@@ -293,6 +305,7 @@ services:
   visualizer-db:
     container_name: letsthink-visualizer-db
     image: mongo:latest
+    restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
@@ -302,6 +315,7 @@ services:
   visual-generator:
     container_name: letsthink-visual-generator
     build: "./visual-generator"
+    restart: always
     ports:
       - 4010:4010
     volumes:
@@ -316,6 +330,7 @@ services:
   query:
     container_name: letsthink-query
     build: "./query"
+    restart: always
     ports:
       - 4011:4011
     volumes:
@@ -331,6 +346,7 @@ services:
   query-db:
     container_name: letsthink-query-db
     image: mongo:latest
+    restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rootpassword
@@ -340,6 +356,7 @@ services:
   vote:
     container_name: letsthink-vote
     build: "./vote"
+    restart: always
     ports:
       - 4012:4012
     volumes:
